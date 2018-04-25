@@ -1,11 +1,11 @@
 class TruthTable:
 	"""
-	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations, with no spaces between characters. Does not attempt to clean given expression, and may break if expression is improperly formatted. 
+	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations, with no spaces between characters. Expressions must be appropriately divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or '(A.B).C'). Does not attempt to clean given expression, and may break if expression is improperly formatted. 
 
 	Operations:
 	- AND: .
 	- OR: +
-	- XOR: #
+	- XOR: ^
 	- NOT: !
 
 	Usage:
@@ -58,26 +58,9 @@ class TruthTable:
 
 	def _parse_expression(self):
 		"""
-		Generates a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations, with no spaces. Does not attempt to clean given expression, and may break if expression is improperly formatted. 
-
-		Operations:
-		- AND: .
-		- OR: +
-		- XOR: #
-		- NOT: !
-
-		Arguments:
-			expression (str): boolean expression to be parsed
-
-		Usage:
-			>>> parse_expression("A.B")
-			A B | X
-			0 0 | 0
-			0 1 | 1
-			1 0 | 1
-			1 1 | 1
+		Calculates outputs of truth table for boolean expression of this truth table.
 		"""
-		operations = {'.':lambda a,b: a&b, '+':lambda a,b: a|b, '#':lambda a,b: a^b}
+		operations = {'.':lambda a,b: a&b, '+':lambda a,b: a|b, '^':lambda a,b: a^b}
 		non_variables = list(operations.keys()) + ['(', ')', '!']
 		self.variables = [x for x in self.expression if x in set(self.expression).difference(non_variables)]
 
@@ -138,13 +121,18 @@ class TruthTable:
 				continue
 			result = -1
 			if sub[i-1] == '!':
-				result = int(sub[index+1])^1 			
+				r = inputs[self.variables.index(element)] if element in self.variables else sub[i]
+				result = int(r)^1
 			elif element in self.variables:
 				result = inputs[self.variables.index(element)]
 			else:
 				result = element
 			results.append(int(result))
-		return str(operations[op](results[0], results[1]))
+		# If expression contained only single variable (e.g. 'A')
+		if op == "":
+			return str(results[0])
+		else:
+			return str(operations[op](results[0], results[1]))
 
 
 	def __str__(self):
@@ -164,4 +152,5 @@ class TruthTable:
 		Returns a formal representation of the truth table of the form 
 		'TruthTable: expression=[expression], variables=[variables], outputs=[outputs]'.
 		"""
-		return f"TruthTable: expression={self.expression}, variables={self.variables}, outputs={self.outputs}"
+		return f"TruthTable: expression='{self.expression}', variables={self.variables}, outputs={self.outputs}"
+
