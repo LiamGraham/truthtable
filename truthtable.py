@@ -1,33 +1,64 @@
 class TruthTable:
+	"""
+	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations, with no spaces between characters. Does not attempt to clean given expression, and may break if expression is improperly formatted. 
+
+	Operations:
+	- AND: .
+	- OR: +
+	- XOR: #
+	- NOT: !
+
+	Usage:
+		>>> table = TruthTable("A.B")
+		>>> table
+		TruthTable: expression=A.B, variables=['A', 'B'], outputs=['0', '0', '0', '1']
+		>>> print(table)
+		A B | X
+		0 0 | 0
+		0 1 | 1
+		1 0 | 1
+		1 1 | 1
+	"""
 
 	def __init__(self, expression):
+		"""
+		Creates a new TruthTable using the given expression. The ouputs are calculated upon creation.
+
+		Arguments:
+			expression (str): boolean expression for which truth table will be created
+		"""
 		self.expression = expression
 		self.variables = []
 		self.outputs = []
-		self.parse_expression()
+		self._parse_expression()
 
 
 	def get_row(self, row_num):
+		"""
+		Returns a string of the inputs and output of the given row. Rows are zero-indexed (i.e. the first row is row 0).
+
+		Arguments:
+			row_num (int): index of row to be retrieved
+		"""
 		inputs = format(row_num, f'0{len(variables)}b')
 		return f"{' '.join(variables)} | X\n {' '.join(inputs)} | {self._outputs[row_num]}" 
 
 
-	def get_table(self):
-		return self.__str__()
-
-
 	def set_expression(self, expression):
+		"""
+		Sets the boolean expression of the table to the given expression and recalculates the ouputs.
+
+		Arguments:
+			expression (str): expression to which this table's expression will be set
+		"""
 		self.expression = expression
 		self.outputs = []
-		self.parse_expression()
+		self._parse_expression()
 
 
-	def parse_expression(self):
+	def _parse_expression(self):
 		"""
-		Generates a truth table of all possible combinations of inputs and outputs 
-		for a given boolean expression. Boolean expressions are composed of single-character 
-		variables and operations, with no spaces. Does not attempt to clean given expression, 
-		and may break if expression is improperly formatted. 
+		Generates a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations, with no spaces. Does not attempt to clean given expression, and may break if expression is improperly formatted. 
 
 		Operations:
 		- AND: .
@@ -86,7 +117,7 @@ class TruthTable:
 
 	def _compute_output(self, sub, inputs, operations):
 		"""
-		Compute result of two-variable boolean expression, being a component of some larger
+		Compute result of two-variable boolean expression, being a component of some larger 
 		expression (e.g. C.D in A+(B.(C.D)))
 
 		Arguments:
@@ -117,12 +148,20 @@ class TruthTable:
 
 
 	def __str__(self):
+		"""
+		Returns an informal string representation of the thruth table, being a table-like arrangement of inputs and outputs.
+
+		"""
 		string = f"{' '.join(self.variables)} | X\n"
 		for i in range(0, len(self.outputs)):
 			inputs = format(i, f'0{len(self.variables)}b')
 			string += f"{' '.join(inputs)} | {self.outputs[i]}\n"
-		return string
+		return string[:-1]
 
 
 	def __repr__(self):
+		"""
+		Returns a formal representation of the truth table of the form 
+		'TruthTable: expression=[expression], variables=[variables], outputs=[outputs]'.
+		"""
 		return f"TruthTable: expression={self.expression}, variables={self.variables}, outputs={self.outputs}"
