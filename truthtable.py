@@ -1,6 +1,6 @@
 class TruthTable:
 	"""
-	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations, with no spaces between characters. Expressions must be appropriately divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or '(A.B).C'). Does not attempt to clean given expression, and may break if expression is improperly formatted. 
+	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations. Expressions must be appropriately divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or '(A.B).C'). Does not attempt to clean given expression (bar removing spaces), and may break if expression is improperly formatted. 
 
 	Operations:
 	- AND: .
@@ -27,7 +27,7 @@ class TruthTable:
 		Arguments:
 			expression (str): boolean expression for which truth table will be created
 		"""
-		self.expression = expression
+		self.expression = expression.replace(" ", "")
 		self.variables = []
 		self.outputs = []
 		self._parse_expression()
@@ -44,6 +44,19 @@ class TruthTable:
 		return f"{' '.join(variables)} | X\n {' '.join(inputs)} | {self._outputs[row_num]}" 
 
 
+	def get_output(self, inputs):
+		"""
+		Returns output of boolean expression for given input string.
+
+		Arguments:
+			inputs (str): combination of bits forming input for expression. For the expression A.B, the input '01' will set A=0 and B=1. The order of inputs is determined by the order of the variables in the expression.
+		"""
+		if len(inputs) != len(self.variables) or inputs is None or inputs.count('0') + inputs.count('1') != len(self.variables):
+			return -1
+		row = int(inputs, base=2)
+		return self.outputs[row]
+
+
 	def set_expression(self, expression):
 		"""
 		Sets the boolean expression of the table to the given expression and recalculates the ouputs.
@@ -51,7 +64,7 @@ class TruthTable:
 		Arguments:
 			expression (str): expression to which this table's expression will be set
 		"""
-		self.expression = expression
+		self.expression = expression.replace(" ", "")
 		self.outputs = []
 		self._parse_expression()
 
@@ -62,7 +75,10 @@ class TruthTable:
 		"""
 		operations = {'.':lambda a,b: a&b, '+':lambda a,b: a|b, '^':lambda a,b: a^b}
 		non_variables = list(operations.keys()) + ['(', ')', '!']
-		self.variables = [x for x in self.expression if x in set(self.expression).difference(non_variables)]
+		self.variables = []
+		for x in self.expression:
+			if x in set(self.expression).difference(non_variables) and x not in self.variables:
+				self.variables.append(x)
 
 		expression = f"({self.expression})"
 
@@ -95,7 +111,7 @@ class TruthTable:
 					result = self._compute_output(expression[start:i+1], inputs, operations)
 					expression[start:i+1] = result
 					break
-		return expression[0]
+		return int(expression[0])
 
 
 	def _compute_output(self, sub, inputs, operations):
@@ -107,7 +123,7 @@ class TruthTable:
 			sub (list[str]): sub-expression to be evaluated
 			operations (dict[str,lambda]): dictionary of boolean operations
 
-		Returns: (str) Output of sub-expression
+		Returns: (str) Output of sub-expression if inputs are valid, otherwise returns -1
 		"""
 		# Bits to be evaluated
 		results = []
@@ -153,4 +169,3 @@ class TruthTable:
 		'TruthTable: expression=[expression], variables=[variables], outputs=[outputs]'.
 		"""
 		return f"TruthTable: expression='{self.expression}', variables={self.variables}, outputs={self.outputs}"
-
