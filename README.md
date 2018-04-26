@@ -15,14 +15,23 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 >>> table
 TruthTable: expression=A.B, variables=['A', 'B'], outputs=['0', '0', '0', '1']
 >>> print(table)
-A B | X
-0 0 | 0
-0 1 | 1
-1 0 | 1
-1 1 | 1
++---+---++---+
+| A | B || X |
++---+---++---+
+| 0 | 0 || 0 |
++---+---++---+
+| 0 | 1 || 0 |
++---+---++---+
+| 1 | 0 || 0 |
++---+---++---+
+| 1 | 1 || 1 |
++---+---++---+
 >>> print(table.get_row(3))
-A B | X
-1 1 | 1
++---+---++---+
+| A | B || X |
++---+---++---+
+| 1 | 1 || 1 |
++---+---++---+
 >>> table.get_output('01')
 0
 ```
