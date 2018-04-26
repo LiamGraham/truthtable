@@ -9,15 +9,29 @@ class TruthTable:
 	- NOT: !
 
 	Usage:
-		>>> table = TruthTable("A.B")
-		>>> table
-		TruthTable: expression=A.B, variables=['A', 'B'], outputs=['0', '0', '0', '1']
-		>>> print(table)
-		A B | X
-		0 0 | 0
-		0 1 | 1
-		1 0 | 1
-		1 1 | 1
+	>>> table = TruthTable("A.B")
+	>>> table
+	TruthTable: expression=A.B, variables=['A', 'B'], outputs=['0', '0', '0', '1']
+	>>> print(table)
+	+---+---++---+
+	| A | B || X |
+	+---+---++---+
+	| 0 | 0 || 0 |
+	+---+---++---+
+	| 0 | 1 || 0 |
+	+---+---++---+
+	| 1 | 0 || 0 |
+	+---+---++---+
+	| 1 | 1 || 1 |
+	+---+---++---+
+	>>> print(table.get_row(3))
+	+---+---++---+
+	| A | B || X |
+	+---+---++---+
+	| 1 | 1 || 1 |
+	+---+---++---+
+	>>> table.get_output('01')
+	0
 	"""
 
 	def __init__(self, expression):
@@ -37,11 +51,17 @@ class TruthTable:
 		"""
 		Returns a string of the inputs and output of the given row. Rows are zero-indexed (i.e. the first row is row 0).
 
+		e.g. For expression=A.B, row_num=3
+		+---+---++---+
+		| A | B || X |
+		+---+---++---+
+		| 1 | 1 || 1 |
+		+---+---++---+
+
 		Arguments:
 			row_num (int): index of row to be retrieved
 		"""
-		inputs = format(row_num, f'0{len(self.variables)}b')
-		return f"{' '.join(self.variables)} | X\n{' '.join(inputs)} | {self.outputs[row_num]}" 
+		return self._get_rows_in_range(row_num, row_num+1)
 
 
 	def get_output(self, inputs):
@@ -103,6 +123,7 @@ class TruthTable:
 		expression = list(expression)
 		
 		while len(expression) > 1:
+			# Index of initial/opening bracketof sub-expression
 			start = 0
 			for i in range(0, len(expression)):
 				if expression[i] == "(":
@@ -155,11 +176,40 @@ class TruthTable:
 		"""
 		Returns an informal string representation of the thruth table, being a table-like arrangement of inputs and outputs.
 
+		e.g. For expression=A.B:
+		+---+---++---+
+		| A | B || X |
+		+---+---++---+
+		| 0 | 0 || 0 |
+		+---+---++---+
+		| 0 | 1 || 0 |
+		+---+---++---+
+		| 1 | 0 || 0 |
+		+---+---++---+
+		| 1 | 1 || 1 |
+		+---+---++---+
 		"""
-		string = f"{' '.join(self.variables)} | X\n"
-		for i in range(0, len(self.outputs)):
+		return self._get_rows_in_range(0, len(self.outputs))
+
+
+	def _get_rows_in_range(self, start, end):
+		"""
+		Returns an informal string representation of the rows of the truth table in the given range, being [start, end).
+
+		e.g. For expression=A.B, start=2, end=4
+		+---+---++---+
+		| A | B || X |
+		+---+---++---+
+		| 1 | 0 || 0 |
+		+---+---++---+
+		| 1 | 1 || 1 |
+		+---+---++---+
+		"""
+		line = ("+---"*len(self.variables)) + "++---+\n"
+		string = line + f"| {' | '.join(self.variables)} || X |\n" + line
+		for i in range(start, end):
 			inputs = format(i, f'0{len(self.variables)}b')
-			string += f"{' '.join(inputs)} | {self.outputs[i]}\n"
+			string += f"| {' | '.join(inputs)} || {self.outputs[i]} |\n" + line
 		return string[:-1]
 
 
