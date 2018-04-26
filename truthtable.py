@@ -40,8 +40,8 @@ class TruthTable:
 		Arguments:
 			row_num (int): index of row to be retrieved
 		"""
-		inputs = format(row_num, f'0{len(variables)}b')
-		return f"{' '.join(variables)} | X\n {' '.join(inputs)} | {self._outputs[row_num]}" 
+		inputs = format(row_num, f'0{len(self.variables)}b')
+		return f"{' '.join(self.variables)} | X\n{' '.join(inputs)} | {self.outputs[row_num]}" 
 
 
 	def get_output(self, inputs):
