@@ -5,7 +5,7 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 ## Operations
 - AND: &
 - OR: +
-- XOR: #
+- XOR: ^
 - NOT: !
 
 ## Usage
