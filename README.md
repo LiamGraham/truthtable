@@ -21,7 +21,7 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 >>> from truthtable import *
 >>> table = TruthTable("A.B")
 >>> table
-TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'Input 1', 'B': 'Input 2'}, outputs=[0, 0, 0, 1]
+TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'A', 'B': 'A'}, outputs=[0, 0, 0, 1]
 >>> print(table)
 +---+---++---+
 | A | B || X |
