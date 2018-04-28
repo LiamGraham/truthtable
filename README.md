@@ -9,12 +9,12 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 - NOT: !
 
 ## Functions
-- get_row(row_num)
-- get_output(inputs)
-- set_alias(variable, alias)
-- set_expression(expression)
-- set_alias(variable, alias)
-- clear_aliases()
+- ```get_row(row_num)```
+- ```get_output(inputs)```
+- ```set_alias(variable, alias)```
+- ```set_expression(expression)```
+- ```set_alias(variable, alias)```
+- ```clear_aliases()```
 
 ## Usage
 ```
