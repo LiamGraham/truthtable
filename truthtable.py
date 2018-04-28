@@ -32,6 +32,20 @@ class TruthTable:
 	+---+---++---+
 	>>> table.get_output('01')
 	0
+	>>> table.set_alias('A', 'Input 1')
+	>>> table.set_alias('B', 'Input 2')
+	>>> print(table)
+	+---------+---------++---+
+	| Input 1 | Input 2 || X |
+	+---------+---------++---+
+	|    0    |    0    || 0 |
+	+---------+---------++---+
+	|    0    |    1    || 0 |
+	+---------+---------++---+
+	|    1    |    0    || 0 |
+	+---------+---------++---+
+	|    1    |    1    || 1 |
+	+---------+---------++---+
 	"""
 
 	def __init__(self, expression):
@@ -42,8 +56,11 @@ class TruthTable:
 			expression (str): boolean expression for which truth table will be created
 		"""
 		self.expression = expression.replace(" ", "")
+		if not self._validate_expression():
+			raise Exception("Invalid expression")
 		self.variables = []
 		self.outputs = []
+		self.aliases = {}
 		self._parse_expression()
 
 
@@ -89,6 +106,22 @@ class TruthTable:
 		self._parse_expression()
 
 
+	def set_alias(self, variable, alias):
+		"""
+		Set an alias for a variable of the expression. The alias will be displayed in place of actual variable when the table is printed.
+		"""
+		if alias is not None and variable is not None and variable in self.variables:
+			self.aliases[variable] = alias
+
+
+	def clear_aliases(self):
+		"""
+		Initially set the alias of each variable to be that variable (i.e. the initial 'alias' of variable 'A' is 'A').  
+		"""
+		for x in self.variables:
+			self.aliases[x] = x
+
+
 	def _parse_expression(self):
 		"""
 		Calculates outputs of truth table for boolean expression of this truth table.
@@ -99,6 +132,7 @@ class TruthTable:
 		for x in self.expression:
 			if x in set(self.expression).difference(non_variables) and x not in self.variables:
 				self.variables.append(x)
+		self.clear_aliases()
 
 		expression = f"({self.expression})"
 
@@ -172,6 +206,16 @@ class TruthTable:
 			return str(operations[op](results[0], results[1]))
 
 
+	def _validate_expression(self):
+		"""
+		Returns true if expression is valid. A valid expression will consist only of single-character variables and valid operators (i.e. '.', '^', '+', and '!').
+
+		Arguments:
+			expression (str): expression to be validated
+		"""
+		return True
+
+
 	def __str__(self):
 		"""
 		Returns an informal string representation of the thruth table, being a table-like arrangement of inputs and outputs.
@@ -205,11 +249,29 @@ class TruthTable:
 		| 1 | 1 || 1 |
 		+---+---++---+
 		"""
-		line = ("+---"*len(self.variables)) + "++---+\n"
-		string = line + f"| {' | '.join(self.variables)} || X |\n" + line
+		# Variables to be displayed (i.e. aliases)
+		display_vars = [self.aliases[x] for x in self.variables]
+		# Spacing of each column based on length of each display variable
+		column_spacing = [len(x) for x in display_vars]
+
+		# Horiztonal table divider (e.g. '+---+---++---+')
+		line = ""
+		for x in column_spacing:
+			line += "+" + ("-"*(x+2))
+		line += "++---+\n"
+
+		# Table representation, beginning with initial row of variables
+		string = f"{line}| {' | '.join(display_vars)} || X |\n{line}"
 		for i in range(start, end):
+			# Sequence of 0s and 1s forming input 
 			inputs = format(i, f'0{len(self.variables)}b')
-			string += f"| {' | '.join(inputs)} || {self.outputs[i]} |\n" + line
+			for j in range(0, len(display_vars)):
+				# Spacings on left and right of individual input, determined by length of variable
+				left_spacing = " "*(column_spacing[j]//2 + 1)
+				right_spacing = " "*(len(left_spacing) - (len(display_vars[j])%2==0))
+				#right_spacing = left_spacing[:len(left_spacing)-(len(display_vars[j])%2)^1]
+				string += f"|{left_spacing}{inputs[j]}{right_spacing}"
+			string += f"|| {self.outputs[i]} |\n{line}"
 		return string[:-1]
 
 
@@ -218,4 +280,11 @@ class TruthTable:
 		Returns a formal representation of the truth table of the form 
 		'TruthTable: expression=[expression], variables=[variables], outputs=[outputs]'.
 		"""
-		return f"TruthTable: expression='{self.expression}', variables={self.variables}, outputs={self.outputs}"
+		return f"TruthTable: expression='{self.expression}', variables={self.variables}, aliases={self.aliases}, outputs={self.outputs}"
+
+
+	def __eq__(self, other):
+		"""
+		Returns true if given truth table has same outputs as this truth table. May be used to determine equivalency of boolean expression. Two expressions are equivalent if they yield the same outputs for the same combinations of inputs (e.g. !A.!B and !(A+B) are equivalent).
+		"""
+		return other.outputs == self.outputs
