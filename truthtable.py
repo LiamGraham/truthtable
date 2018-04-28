@@ -1,6 +1,8 @@
+import string
+
 class TruthTable:
 	"""
-	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations. Expressions must be appropriately divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or '(A.B).C'). Does not attempt to clean given expression (bar removing spaces), and may break if expression is improperly formatted. 
+	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations. Expressions must be appropriately divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or '(A.B).C') indicating precedence/order of operations.
 
 	Operations:
 	- AND: .
@@ -11,7 +13,7 @@ class TruthTable:
 	Usage:
 	>>> table = TruthTable("A.B")
 	>>> table
-	TruthTable: expression=A.B, variables=['A', 'B'], outputs=['0', '0', '0', '1']
+	TruthTable: expression=A.B, variables=['A', 'B'], aliases={'A': 'A', 'B': 'B'}, outputs=['0', '0', '0', '1']
 	>>> print(table)
 	+---+---++---+
 	| A | B || X |
@@ -46,6 +48,13 @@ class TruthTable:
 	+---------+---------++---+
 	|    1    |    1    || 1 |
 	+---------+---------++---+
+
+	Attributes:
+		expression (str): boolean expression for which table is created
+		variables (list[str]): variables in expression
+		outputs (list[int]): complete set of outputs of truth table
+		aliases (dict[str, str]): aliases of variables to be displayed 
+		operations (dict[str, lambda]): possible boolean operations and their symbols
 	"""
 
 	def __init__(self, expression):
@@ -56,11 +65,11 @@ class TruthTable:
 			expression (str): boolean expression for which truth table will be created
 		"""
 		self.expression = expression.replace(" ", "")
-		if not self._validate_expression():
-			raise Exception("Invalid expression")
 		self.variables = []
 		self.outputs = []
 		self.aliases = {}
+		self.operations = {'.':lambda a,b: a&b, '+':lambda a,b: a|b, '^':lambda a,b: a^b}
+		self._validate_expression()
 		self._parse_expression()
 
 
@@ -102,8 +111,10 @@ class TruthTable:
 			expression (str): expression to which this table's expression will be set
 		"""
 		self.expression = expression.replace(" ", "")
+		self._validate_expression()
 		self.outputs = []
 		self._parse_expression()
+		self.clear_aliases()
 
 
 	def set_alias(self, variable, alias):
@@ -118,6 +129,7 @@ class TruthTable:
 		"""
 		Initially set the alias of each variable to be that variable (i.e. the initial 'alias' of variable 'A' is 'A').  
 		"""
+		self.aliases.clear()
 		for x in self.variables:
 			self.aliases[x] = x
 
@@ -126,8 +138,7 @@ class TruthTable:
 		"""
 		Calculates outputs of truth table for boolean expression of this truth table.
 		"""
-		operations = {'.':lambda a,b: a&b, '+':lambda a,b: a|b, '^':lambda a,b: a^b}
-		non_variables = list(operations.keys()) + ['(', ')', '!']
+		non_variables = list(self.operations.keys()) + ['(', ')', '!']
 		self.variables = []
 		for x in self.expression:
 			if x in set(self.expression).difference(non_variables) and x not in self.variables:
@@ -138,10 +149,10 @@ class TruthTable:
 
 		for i in range(0, 2** len(self.variables)):
 			inputs = format(i, f'0{len(self.variables)}b')
-			self.outputs.append(self._evaluate_expression(expression, inputs, operations))
+			self.outputs.append(self._evaluate_expression(expression, inputs))
 
 
-	def _evaluate_expression(self, expression, inputs, operations):
+	def _evaluate_expression(self, expression, inputs):
 		"""
 		Evaluate given boolean expression for some combination of inputs. 
 
@@ -149,8 +160,7 @@ class TruthTable:
 			expression (str): boolean expression to be evaluated
 			variables (list[str]): list of variables in complete expression
 			inputs (str): binary string, with each bit being the input for the variable
-			at the same index in 'variables'
-			operations (dict[str,lambda]): dictionary of boolean operations 
+			at the same index in 'variables' 
 		
 		Returns: (str) Output of expression
 		"""
@@ -163,20 +173,19 @@ class TruthTable:
 				if expression[i] == "(":
 					start = i
 				if expression[i] == ")":
-					result = self._compute_output(expression[start:i+1], inputs, operations)
+					result = self._compute_output(expression[start:i+1], inputs)
 					expression[start:i+1] = result
 					break
 		return int(expression[0])
 
 
-	def _compute_output(self, sub, inputs, operations):
+	def _compute_output(self, sub, inputs):
 		"""
 		Compute result of two-variable boolean expression, being a component of some larger 
 		expression (e.g. C.D in A+(B.(C.D)))
 
 		Arguments:
 			sub (list[str]): sub-expression to be evaluated
-			operations (dict[str,lambda]): dictionary of boolean operations
 
 		Returns: (str) Output of sub-expression if inputs are valid, otherwise returns -1
 		"""
@@ -188,7 +197,7 @@ class TruthTable:
 		for i in range(0, len(sub)):
 			element = sub[i]
 			if element not in (self.variables + ['0', '1']):
-				op = element if element in operations.keys() else op
+				op = element if element in self.operations.keys() else op
 				continue
 			result = -1
 			if sub[i-1] == '!':
@@ -203,17 +212,93 @@ class TruthTable:
 		if op == "":
 			return str(results[0])
 		else:
-			return str(operations[op](results[0], results[1]))
+			return str(self.operations[op](results[0], results[1]))
 
 
 	def _validate_expression(self):
 		"""
-		Returns true if expression is valid. A valid expression will consist only of single-character variables and valid operators (i.e. '.', '^', '+', and '!').
+		Determines if expression is valid. A valid expression will consist only of single-character variables and valid operators (i.e. '.', '^', '+', and '!'). The order of operations will be appropriately defined by closed parentheses.
 
-		Arguments:
-			expression (str): expression to be validated
+		Invalid Expressions:
+		- A.
+		- A.(B+C
+		- A!.B
 		"""
-		return True
+		self._check_bracket_closure()
+		self._check_symbols()
+		self._check_precedence()
+
+
+	def _check_symbols(self):
+		"""
+		Determine if non-parathetic symbols are legal (i.e. letters or operators) and are in a valid order (i.e. operators precede and follow variables, and vice versa).
+
+		Raises:
+			InvalidExpressionError: if 
+		"""
+		message = ""
+		prev = "\n"
+		expression = self.expression.replace("(", "").replace(")", "")
+
+		for i in range(0, len(expression)):
+			char = expression[i]
+			if char in self.operations.keys() and (prev not in string.ascii_letters or i == (len(expression) - 1)):
+				message = f"Operator must precede or follow variable ({i})"
+				break
+			elif char in string.ascii_letters and i > 0 and prev != '!' and prev not in self.operations.keys():
+				message = f"Variable must precede or follow operator ({i})"
+				break
+			elif char == '!' and prev not in self.operations.keys() and (i > 0 or i == (len(expression) - 1)):
+				message = f"Negator must precede a variable ({i})"
+			elif char != '!' and char not in self.operations.keys() and char not in string.ascii_letters:
+				message = f"Invalid symbol in expression: {char} ({i})"
+				break
+			prev = char
+		if message or not expression:
+			message += "Expression must contain variables and operators"*(len(expression)==0)
+			raise InvalidExpressionError(message)
+
+
+	def _check_bracket_closure(self):
+		"""
+		Determine if expression brackets are properly matched.
+
+		e.g. 'A.(B+C)' is valid, 'A.(B+C' is not
+
+		Raises:
+			InvalidExpressionError: if brackets are improperly matched
+		"""
+		total = 0
+		increment = {'(':1, ')':-1}
+		for x in self.expression:
+			total += increment.get(x, 0)
+			if total < 0:
+				break
+		if total != 0:
+			raise InvalidExpressionError("Brackets are improperly matched")
+
+
+	def _check_precedence(self):
+		"""
+		Determine if order of operations is clearly indicated by paratheses. An expression must contain only parathesised subexpressions consisting of two variables (or subexpressions) and one operator. The outermost subexpression need not be parenthesised.
+
+		e.g. A.(B+C) is valid, A.B+C is not 
+
+		Raises:
+			InvalidExpressionError: if precendence/order of operations is not properly indicated
+
+		"""
+		expression = list(f"({self.expression})")
+		while len(expression) > 1:
+			for i in range(0, len(expression)):
+				if expression[i] == "(":
+					start = i
+				if expression[i] == ")":
+					sub = expression[start+1:i]
+					if len(sub) > (3+sub.count("!")):
+						raise InvalidExpressionError("Operation precedence unclear")
+					expression[start:i+1] = "X"
+					break
 
 
 	def __str__(self):
@@ -266,7 +351,7 @@ class TruthTable:
 			# Sequence of 0s and 1s forming input 
 			inputs = format(i, f'0{len(self.variables)}b')
 			for j in range(0, len(display_vars)):
-				# Spacings on left and right of individual input, determined by length of variable
+				# Spacings on left and right of individual input, determined by length of alias
 				left_spacing = " "*(column_spacing[j]//2 + 1)
 				right_spacing = " "*(len(left_spacing) - (len(display_vars[j])%2==0))
 				#right_spacing = left_spacing[:len(left_spacing)-(len(display_vars[j])%2)^1]
@@ -288,3 +373,8 @@ class TruthTable:
 		Returns true if given truth table has same outputs as this truth table. May be used to determine equivalency of boolean expression. Two expressions are equivalent if they yield the same outputs for the same combinations of inputs (e.g. !A.!B and !(A+B) are equivalent).
 		"""
 		return other.outputs == self.outputs
+
+class InvalidExpressionError(Exception):
+
+	def __init__(self, message):
+		self.message = message
