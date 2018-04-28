@@ -1,6 +1,6 @@
 # Truth Table Generator
 
-Tool to evaluate any given boolean expression and generate a truth table of all possible inputs and outputs. truthtable.py allows the creation of a TruthTable object which stores truth table and expression data. A text-based representation of the table may be retrieved, as may individual rows. One may also retrieve the output of the expression for a given set of inputs. 
+Tool to evaluate any given boolean expression and generate a truth table of all possible inputs and outputs. truthtable.py allows the creation of a TruthTable object which stores truth table and expression data. A text-based representation of the table may be retrieved, as may individual rows. 
 
 ## Operations
 - AND: &
@@ -8,12 +8,20 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 - XOR: ^
 - NOT: !
 
+## Functions
+- get_row(row_num)
+- get_output(inputs)
+- set_alias(variable, alias)
+- set_expression(expression)
+- set_alias(variable, alias)
+- clear_aliases()
+
 ## Usage
 ```
 >>> from truthtable import *
 >>> table = TruthTable("A.B")
 >>> table
-TruthTable: expression=A.B, variables=['A', 'B'], outputs=['0', '0', '0', '1']
+TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'Input 1', 'B': 'Input 2'}, outputs=[0, 0, 0, 1]
 >>> print(table)
 +---+---++---+
 | A | B || X |
@@ -34,4 +42,18 @@ TruthTable: expression=A.B, variables=['A', 'B'], outputs=['0', '0', '0', '1']
 +---+---++---+
 >>> table.get_output('01')
 0
+>>> table.set_alias('A', 'Input 1')
+>>> table.set_alias('B', 'Input 2')
+>>> print(table)
++---------+---------++---+
+| Input 1 | Input 2 || X |
++---------+---------++---+
+|    0    |    0    || 0 |
++---------+---------++---+
+|    0    |    1    || 0 |
++---------+---------++---+
+|    1    |    0    || 0 |
++---------+---------++---+
+|    1    |    1    || 1 |
++---------+---------++---+
 ```
