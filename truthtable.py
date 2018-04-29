@@ -4,6 +4,12 @@ class TruthTable:
 	"""
 	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations. Expressions must be appropriately divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or '(A.B).C') indicating precedence/order of operations.
 
+	Operations:
+	- AND: &, .
+	- OR: +, |
+	- XOR: ^, #
+	- NOT: !, ~
+
 	Attributes:
 		expression (str): boolean expression for which table is created
 		variables (list[str]): variables in expression
@@ -11,6 +17,8 @@ class TruthTable:
 		aliases (dict[str, str]): aliases of variables to be displayed 
 		operations (dict[str, lambda]): possible boolean operations and their symbols
 	"""
+
+	# operations = {}
 
 	def __init__(self, expression):
 		"""
@@ -25,7 +33,9 @@ class TruthTable:
 		self.variables = []
 		self.outputs = []
 		self.aliases = {}
-		self.operations = {'.':lambda a,b: a&b, '+':lambda a,b: a|b, '^':lambda a,b: a^b}
+		self.operations = {}
+		self.negators = []
+		self._initialise_operations()
 		self.set_expression(expression)
 
 
@@ -149,6 +159,38 @@ class TruthTable:
 			operator (str): operator to link expressions of given table and this table
 			distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced with variables not occuring in self.expression, otherwise table.expression will remain unchanged
 		"""
+		self.set_expression(self._merging(table, operator, distinct))	
+
+
+	def merged(self, table, operator, distinct=True):
+		"""
+		Returns a truth table of the expression created by combining the expression of the given truth table with this table using a single linking operator. If distinct is True, any variable names in table.expression also in self.expression will be replaced with variables not occuring in self.expression. Otherwise, duplicate variable symbols will be treated as referring to the same variable.
+
+		Arguments:
+			table (TruthTable): table to be merged with this table
+			operator (str): operator to link expressions of given table and this table
+			distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced with variables not occuring in self.expression, otherwise table.expression will remain unchanged
+
+		Returns (TruthTable): truth table of expression created by combining self.expression and table.expression linked by operator
+		"""
+		return TruthTable(self._merging(table, operator, distinct))
+
+
+	def _merging(self, table, operator, distinct=True):
+		"""
+		Returns merged expression for both self.merge and self.merged.
+
+		Arguments:
+			table (TruthTable): table to be merged with this table
+			operator (str): operator to link expressions of given table and this table
+			distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced with variables not occuring in self.expression, otherwise table.expression will remain unchanged
+
+		Raises:
+			TypeError: if given table is None
+			InvalidExpressionError: if given operator is not legal (i.e. operator in self.operations.keys() == False)
+
+		Returns (str): expression created by combining self.expression and table.expression linked by operator
+		"""
 		if type(table) != TruthTable:
 			raise TypeError(f"Table must be a TruthTable, not a {type(table)}")
 		if operator not in self.operations.keys():
@@ -161,7 +203,7 @@ class TruthTable:
 		if distinct:
 			texp = self._replace_duplicates(texp)
 
-		self.set_expression(f"({self.expression}){operator}({texp})")	
+		return f"({self.expression}){operator}({texp})"
 
 
 	def set_ordering(self, ordering):
@@ -180,8 +222,23 @@ class TruthTable:
 
 
 	def clear_ordering(self):
+		"""
+		Remove specified ordering of variables and restore natural ordering (i.e. order in which they appear in expression).
+		"""
 		self.variables = self._parse_variables()
 		self._parse_expression()
+
+
+	def add_operator(name, symbol):
+		operators = {'AND':['.', '&'], 'OR':['+', '|'], 'XOR':['^', '#']}
+		if name not in ['AND', 'OR', 'XOR']:
+			raise InvalidExpressionError("Name must be AND, OR, or XOR")
+
+
+		for op in operators:
+			for symb in operators[op]:
+				self.operations[symb] = functions[op]
+
 
 
 	def _replace_duplicates(self, expression):
@@ -446,6 +503,15 @@ class TruthTable:
 				string += f"|{left_spacing}{inputs[j]}{right_spacing}"
 			string += f"|| {self.outputs[i]} |\n{line}"
 		return string[:-1]
+
+
+	def _initialise_operations(self):
+		functions = {'AND':lambda a,b: a&b, 'OR':lambda a,b: a|b, 'XOR':lambda a,b: a^b}
+		operators = {'AND':['.', '&'], 'OR':['+', '|'], 'XOR':['^', '#']}
+
+		for op in operators:
+			for symb in operators[op]:
+				self.operations[symb] = functions[op]
 
 
 	def __repr__(self):
