@@ -3,15 +3,14 @@
 Tool to evaluate any given boolean expression and generate a truth table of all possible inputs and outputs. truthtable.py allows the creation of a TruthTable object which stores truth table and expression data. A text-based representation of the table may be retrieved, as may individual rows. 
 
 ## Operations
-- AND: &
-- OR: +
-- XOR: ^
+- AND: &, .
+- OR: +, |
+- XOR: ^, #
 - NOT: !
 
 ## Methods
 - ```get_row(row_num)```
 - ```get_output(inputs)```
-- ```set_alias(variable, alias)```
 - ```set_expression(expression)```
 - ```set_alias(variable, alias)```
 - ```clear_aliases()```
@@ -49,17 +48,11 @@ TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'A', 'B': 'A'}
 0
 >>> table.set_alias('A', 'Input 1')
 >>> table.set_alias('B', 'Input 2')
->>> print(table)
+>>> print(table.get_row(0))
 +---------+---------++---+
 | Input 1 | Input 2 || X |
 +---------+---------++---+
 |    0    |    0    || 0 |
-+---------+---------++---+
-|    0    |    1    || 0 |
-+---------+---------++---+
-|    1    |    0    || 0 |
-+---------+---------++---+
-|    1    |    1    || 1 |
 +---------+---------++---+
 >>> table.merge(TruthTable('A+B'), '.')
 >>> table
