@@ -216,7 +216,6 @@ class TruthTable:
 		expression = f"({self.expression})"
 
 		for i in range(0, 2**len(self.variables)):
-			print(f"i={i}")
 			inputs = self._get_inputs(i)
 			self.outputs.append(self._evaluate_expression(expression, inputs))
 
