@@ -75,7 +75,7 @@ class TruthTable:
 
 	def get_row(self, row_num):
 		"""
-		Returns a string of the inputs and output of the given row. Rows are zero-indexed (i.e. the first row is row 0).
+		Returns the inputs and output of the row in the truth table of the given row number. Rows are zero-indexed (i.e. the first row is row 0).
 
 		e.g. For expression=A.B, row_num=3
 		+---+---++---+
@@ -86,6 +86,8 @@ class TruthTable:
 
 		Arguments:
 			row_num (int): index of row to be retrieved
+
+		Returns (str): inputs and output of row of given row number
 		"""
 		return self._get_rows_in_range(row_num, row_num+1)
 
@@ -96,6 +98,8 @@ class TruthTable:
 
 		Arguments:
 			inputs (str): combination of bits forming input for expression. For the expression A.B, the input '01' will set A=0 and B=1. The order of inputs is determined by the order of the variables in the expression.
+
+		Returns (int): output of boolean expression for given inputs if inputs are valid, otherwise -1
 		"""
 		if len(inputs) != len(self.variables) or inputs is None or inputs.count('0') + inputs.count('1') != len(self.variables):
 			return -1
@@ -112,7 +116,6 @@ class TruthTable:
 		"""
 		self.expression = expression.replace(" ", "")
 		self._validate_expression()
-		self.outputs = []
 		self._parse_expression()
 		self.clear_aliases()
 
@@ -134,10 +137,75 @@ class TruthTable:
 			self.aliases[x] = x
 
 
+
+	def sum_of_products(self):
+		"""
+		Returns sum of products expression for this truth table.
+
+		e.g. The following table will return '(!A.B)+(A.!B)+(A.B)'
+		+---+---++---+
+		| A | B || X |
+		+---+---++---+
+		| 0 | 0 || 0 |
+		+---+---++---+
+		| 0 | 1 || 1 |
+		+---+---++---+
+		| 1 | 0 || 1 |
+		+---+---++---+
+		| 1 | 1 || 1 |
+		+---+---++---+
+
+		Returns (str): sum of products for this truth table
+		"""
+		products = ""
+		for i in range(0, len(self.outputs)):
+			if self.outputs[i] == 0:
+				continue
+			inputs = self._get_inputs(i)
+			sub = ""
+			for j in range(0, len(inputs)):
+				sub += f"{'!'*(inputs[j]=='0')}{self.variables[j]}{'.'*(j<len(inputs)-1)}"
+			products += f"({sub}){'+'*(i<len(self.outputs)-1)}"
+		return products
+
+
+	def merge(self, table, operator):
+		"""
+		Merges the expression of the given truth table with this table by linking them with a single operator and recalculates the resulting outputs. Any variable names in table.expression also in self.expression will be replaced with variables not occuring in self.expression.  
+
+		e.g. 'A.B' and 'A+B', linked by '+', become '(A.B)+(C+D)'
+
+		Arguments:
+			table (TruthTable): table to be merged with this table
+			operator (str): operator to link expressions of given table and this table
+		"""
+		if type(table) != TruthTable:
+			raise TypeError(f"Table must be a TruthTable, not a {type(table)}")
+		if operator not in self.operations.keys():
+			raise InvalidExpressionError(f"Illegal operator: {operator}")
+		
+		# Variables in self.expression also in table.expression
+		duplicates = []
+		texp = table.expression
+
+		for x in texp:
+			if x in string.ascii_letters and x in self.expression:
+				duplicates.append(x)
+		
+		# Available variables that may replace duplicate variables in table.expression
+		available = iter(sorted(set(string.ascii_uppercase).difference(set(self.expression).intersection(string.ascii_letters))))
+
+		for x in duplicates:
+			texp = texp.replace(x, next(available))
+
+		self.set_expression(f"({self.expression}){operator}({texp})")	
+
+
 	def _parse_expression(self):
 		"""
 		Calculates outputs of truth table for boolean expression of this truth table.
 		"""
+		self.outputs = []
 		non_variables = list(self.operations.keys()) + ['(', ')', '!']
 		self.variables = []
 		for x in self.expression:
@@ -147,8 +215,8 @@ class TruthTable:
 
 		expression = f"({self.expression})"
 
-		for i in range(0, 2** len(self.variables)):
-			inputs = format(i, f'0{len(self.variables)}b')
+		for i in range(0, 2**len(self.variables)):
+			inputs = self._get_inputs(i)
 			self.outputs.append(self._evaluate_expression(expression, inputs))
 
 
@@ -243,13 +311,13 @@ class TruthTable:
 		for i in range(0, len(expression)):
 			char = expression[i]
 			if char in self.operations.keys() and (prev not in string.ascii_letters or i == (len(expression) - 1)):
-				message = f"Operator must precede or follow variable ({i})"
+				message = f"Operator must occur between variables or subexpressions ({i})"
 				break
 			elif char in string.ascii_letters and i > 0 and prev != '!' and prev not in self.operations.keys():
-				message = f"Variable must precede or follow operator ({i})"
+				message = f"Variable must precede or follow an operator ({i})"
 				break
-			elif char == '!' and prev not in self.operations.keys() and (i > 0 or i == (len(expression) - 1)):
-				message = f"Negator must precede a variable ({i})"
+			elif char == '!' and ((prev not in self.operations.keys() and i > 0) or (i == (len(expression) - 1))):
+				message = f"Negator must precede a variable {'and follow an operator '*(i>0)}({i})"
 			elif char != '!' and char not in self.operations.keys() and char not in string.ascii_letters:
 				message = f"Invalid symbol in expression: {char} ({i})"
 				break
@@ -268,19 +336,20 @@ class TruthTable:
 		Raises:
 			InvalidExpressionError: if brackets are improperly matched
 		"""
-		total = 0
-		increment = {'(':1, ')':-1}
+		# Open brackets increment, closed brackets decrement, valid expression has closure of 0
+		closure = 0
+		change = {'(':1, ')':-1}
 		for x in self.expression:
-			total += increment.get(x, 0)
-			if total < 0:
+			closure += change.get(x, 0)
+			if closure < 0:
 				break
-		if total != 0:
+		if closure != 0:
 			raise InvalidExpressionError("Brackets are improperly matched")
 
 
 	def _check_precedence(self):
 		"""
-		Determine if order of operations is clearly indicated by paratheses. An expression must contain only parathesised subexpressions consisting of two variables (or subexpressions) and one operator. The outermost subexpression need not be parenthesised.
+		Determine if order of operations is clearly indicated by paratheses. An expression must contain only of parathesised subexpressions consisting of two variables (or subexpressions) and one operator. The outermost subexpression need not be parenthesised.
 
 		e.g. A.(B+C) is valid, A.B+C is not 
 
@@ -296,14 +365,26 @@ class TruthTable:
 				if expression[i] == ")":
 					sub = expression[start+1:i]
 					if len(sub) > (3+sub.count("!")):
-						raise InvalidExpressionError("Operation precedence unclear")
+						raise InvalidExpressionError("Order of operations unclear")
 					expression[start:i+1] = "X"
 					break
 
 
+	def _get_inputs(self, value):
+		"""
+		Returns sequence of bits together forming input for boolean expression, whereby the corresponding variable of each bit is self.variables[index of current bit].
+
+		Arguments:
+			value (int): base-10 (decimal) value to be converted to binary input sequence
+
+		Returns (str): sequence of bits forming input
+		"""
+		return format(value, f'0{len(self.variables)}b')
+
+
 	def __str__(self):
 		"""
-		Returns an informal string representation of the thruth table, being a table-like arrangement of inputs and outputs.
+		Returns an informal string representation of the truth table, being a table-like arrangement of inputs and outputs.
 
 		e.g. For expression=A.B:
 		+---+---++---+
@@ -317,6 +398,8 @@ class TruthTable:
 		+---+---++---+
 		| 1 | 1 || 1 |
 		+---+---++---+
+
+		Returns (str): informal representation of truth table
 		"""
 		return self._get_rows_in_range(0, len(self.outputs))
 
@@ -333,6 +416,8 @@ class TruthTable:
 		+---+---++---+
 		| 1 | 1 || 1 |
 		+---+---++---+
+
+		Returns: informal string representation of rows of truth table in given range
 		"""
 		# Variables to be displayed (i.e. aliases)
 		display_vars = [self.aliases[x] for x in self.variables]
@@ -349,7 +434,7 @@ class TruthTable:
 		string = f"{line}| {' | '.join(display_vars)} || X |\n{line}"
 		for i in range(start, end):
 			# Sequence of 0s and 1s forming input 
-			inputs = format(i, f'0{len(self.variables)}b')
+			inputs = self._get_inputs(i)
 			for j in range(0, len(display_vars)):
 				# Spacings on left and right of individual input, determined by length of alias
 				left_spacing = " "*(column_spacing[j]//2 + 1)
@@ -364,6 +449,8 @@ class TruthTable:
 		"""
 		Returns a formal representation of the truth table of the form 
 		'TruthTable: expression=[expression], variables=[variables], outputs=[outputs]'.
+
+		Returns (str): formal representation of truth table
 		"""
 		return f"TruthTable: expression='{self.expression}', variables={self.variables}, aliases={self.aliases}, outputs={self.outputs}"
 
@@ -371,10 +458,18 @@ class TruthTable:
 	def __eq__(self, other):
 		"""
 		Returns true if given truth table has same outputs as this truth table. May be used to determine equivalency of boolean expression. Two expressions are equivalent if they yield the same outputs for the same combinations of inputs (e.g. !A.!B and !(A+B) are equivalent).
+
+		Returns (boolean): true if outputs of given truth table equal outputs of this truth table
 		"""
 		return other.outputs == self.outputs
+
 
 class InvalidExpressionError(Exception):
 
 	def __init__(self, message):
 		self.message = message
+
+
+if __name__ == "__main__":
+    import sys
+    print(TruthTable(sys.argv[1]))
