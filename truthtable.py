@@ -4,51 +4,6 @@ class TruthTable:
 	"""
 	Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression. Boolean expressions are composed of single-character variables and operations. Expressions must be appropriately divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or '(A.B).C') indicating precedence/order of operations.
 
-	Operations:
-	- AND: .
-	- OR: +
-	- XOR: ^
-	- NOT: !
-
-	Usage:
-	>>> table = TruthTable("A.B")
-	>>> table
-	TruthTable: expression=A.B, variables=['A', 'B'], aliases={'A': 'A', 'B': 'B'}, outputs=['0', '0', '0', '1']
-	>>> print(table)
-	+---+---++---+
-	| A | B || X |
-	+---+---++---+
-	| 0 | 0 || 0 |
-	+---+---++---+
-	| 0 | 1 || 0 |
-	+---+---++---+
-	| 1 | 0 || 0 |
-	+---+---++---+
-	| 1 | 1 || 1 |
-	+---+---++---+
-	>>> print(table.get_row(3))
-	+---+---++---+
-	| A | B || X |
-	+---+---++---+
-	| 1 | 1 || 1 |
-	+---+---++---+
-	>>> table.get_output('01')
-	0
-	>>> table.set_alias('A', 'Input 1')
-	>>> table.set_alias('B', 'Input 2')
-	>>> print(table)
-	+---------+---------++---+
-	| Input 1 | Input 2 || X |
-	+---------+---------++---+
-	|    0    |    0    || 0 |
-	+---------+---------++---+
-	|    0    |    1    || 0 |
-	+---------+---------++---+
-	|    1    |    0    || 0 |
-	+---------+---------++---+
-	|    1    |    1    || 1 |
-	+---------+---------++---+
-
 	Attributes:
 		expression (str): boolean expression for which table is created
 		variables (list[str]): variables in expression
@@ -64,13 +19,14 @@ class TruthTable:
 		Arguments:
 			expression (str): boolean expression for which truth table will be created
 		"""
-		self.expression = expression.replace(" ", "")
+		if expression is None:
+			raise TypeError("Expression cannot be None")
+		self.expression = ""
 		self.variables = []
 		self.outputs = []
 		self.aliases = {}
 		self.operations = {'.':lambda a,b: a&b, '+':lambda a,b: a|b, '^':lambda a,b: a^b}
-		self._validate_expression()
-		self._parse_expression()
+		self.set_expression(expression)
 
 
 	def get_row(self, row_num):
@@ -116,6 +72,7 @@ class TruthTable:
 		"""
 		self.expression = expression.replace(" ", "")
 		self._validate_expression()
+		self.variables = self._parse_variables()
 		self._parse_expression()
 		self.clear_aliases()
 
@@ -136,6 +93,18 @@ class TruthTable:
 		for x in self.variables:
 			self.aliases[x] = x
 
+
+	def equivalent(self, expression):
+		"""
+		Returns true if the expression of this truth table is equivalent to given expression (i.e. they both yield the same outputs).
+
+		Returns (boolean): true if given expression is equivalent to the expression of this table
+		"""
+		if expression != self.expression:
+			table = TruthTable(expression)
+		else:
+			table = self
+		return table == self
 
 
 	def sum_of_products(self):
@@ -169,15 +138,16 @@ class TruthTable:
 		return products
 
 
-	def merge(self, table, operator):
+	def merge(self, table, operator, distinct=True):
 		"""
-		Merges the expression of the given truth table with this table by linking them with a single operator and recalculates the resulting outputs. Any variable names in table.expression also in self.expression will be replaced with variables not occuring in self.expression.  
+		Merges the expression of the given truth table with this table by linking them with a single operator and recalculates the resulting outputs. If distinct is True, any variable names in table.expression also in self.expression will be replaced with variables not occuring in self.expression. Otherwise, duplicate variable symbols will be treated as referring to the same variable.
 
 		e.g. 'A.B' and 'A+B', linked by '+', become '(A.B)+(C+D)'
 
 		Arguments:
 			table (TruthTable): table to be merged with this table
 			operator (str): operator to link expressions of given table and this table
+			distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced with variables not occuring in self.expression, otherwise table.expression will remain unchanged
 		"""
 		if type(table) != TruthTable:
 			raise TypeError(f"Table must be a TruthTable, not a {type(table)}")
@@ -188,7 +158,37 @@ class TruthTable:
 		duplicates = []
 		texp = table.expression
 
-		for x in texp:
+		if distinct:
+			texp = self._replace_duplicates(texp)
+
+		self.set_expression(f"({self.expression}){operator}({texp})")	
+
+
+	def set_ordering(self, ordering):
+		"""
+		Set order in which variables will be arranged in truth table.
+
+		Arguments:
+			ordering (list[str]): all variables in expression as they will be ordered in truth table
+		"""
+		if ordering is None:
+			raise TypeError("Ordering cannot be None")
+		if set(ordering) != set(self.variables):
+			raise InvalidExpressionError("Ordering must contain all variables in expression")
+		self.variables = ordering
+		self._parse_expression()
+
+
+	def clear_ordering(self):
+		self.variables = self._parse_variables()
+		self._parse_expression()
+
+
+	def _replace_duplicates(self, expression):
+		# Variables in self.expression also in table.expression
+		duplicates = []
+		
+		for x in expression:
 			if x in string.ascii_letters and x in self.expression:
 				duplicates.append(x)
 		
@@ -196,9 +196,8 @@ class TruthTable:
 		available = iter(sorted(set(string.ascii_uppercase).difference(set(self.expression).intersection(string.ascii_letters))))
 
 		for x in duplicates:
-			texp = texp.replace(x, next(available))
-
-		self.set_expression(f"({self.expression}){operator}({texp})")	
+			expression = expression.replace(x, next(available))
+		return expression
 
 
 	def _parse_expression(self):
@@ -206,11 +205,6 @@ class TruthTable:
 		Calculates outputs of truth table for boolean expression of this truth table.
 		"""
 		self.outputs = []
-		non_variables = list(self.operations.keys()) + ['(', ')', '!']
-		self.variables = []
-		for x in self.expression:
-			if x in set(self.expression).difference(non_variables) and x not in self.variables:
-				self.variables.append(x)
 		self.clear_aliases()
 
 		expression = f"({self.expression})"
@@ -218,6 +212,15 @@ class TruthTable:
 		for i in range(0, 2**len(self.variables)):
 			inputs = self._get_inputs(i)
 			self.outputs.append(self._evaluate_expression(expression, inputs))
+
+
+	def _parse_variables(self):
+		non_variables = list(self.operations.keys()) + ['(', ')', '!']
+		variables = []
+		for x in self.expression:
+			if x in set(self.expression).difference(non_variables) and x not in variables:
+				variables.append(x)
+		return variables
 
 
 	def _evaluate_expression(self, expression, inputs):
@@ -472,4 +475,7 @@ class InvalidExpressionError(Exception):
 
 if __name__ == "__main__":
     import sys
-    print(TruthTable(sys.argv[1]))
+    try:
+    	print(TruthTable(sys.argv[1]))
+    except IndexError:
+    	print("Command unavailable")
