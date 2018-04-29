@@ -8,13 +8,16 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 - XOR: ^
 - NOT: !
 
-## Functions
+## Methods
 - ```get_row(row_num)```
 - ```get_output(inputs)```
 - ```set_alias(variable, alias)```
 - ```set_expression(expression)```
 - ```set_alias(variable, alias)```
 - ```clear_aliases()```
+- ```sum_of_products()```
+- ```merge(table, operator)```
+
 
 ## Usage
 ```
@@ -56,4 +59,7 @@ TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'A', 'B': 'A'}
 +---------+---------++---+
 |    1    |    1    || 1 |
 +---------+---------++---+
+>>> table.merge(TruthTable('A+B'), '.')
+>>> table
+TruthTable: expression='(A.B).(C+D)', variables=['A', 'B', 'C', 'D'], aliases={'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D'}, outputs=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 ```
