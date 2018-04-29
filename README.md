@@ -21,11 +21,15 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 - ```clear_ordering()```
 
 ## Usage
+### Create Table
 ```
 >>> from truthtable import *
 >>> table = TruthTable("A.B")
 >>> table
 TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'A', 'B': 'A'}, outputs=[0, 0, 0, 1]
+```
+### View Table
+```
 >>> print(table)
 +---+---++---+
 | A | B || X |
@@ -46,6 +50,9 @@ TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'A', 'B': 'A'}
 +---+---++---+
 >>> table.get_output('01')
 0
+```
+### Set Aliases
+```
 >>> table.set_alias('A', 'Input 1')
 >>> table.set_alias('B', 'Input 2')
 >>> print(table.get_row(0))
@@ -54,7 +61,34 @@ TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'A', 'B': 'A'}
 +---------+---------++---+
 |    0    |    0    || 0 |
 +---------+---------++---+
+```
+### Merge Tables
+```
 >>> table.merge(TruthTable('A+B'), '.')
 >>> table
 TruthTable: expression='(A.B).(C+D)', variables=['A', 'B', 'C', 'D'], aliases={'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D'}, outputs=[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]
 ```
+### Set Ordering
+```
+>>> table = TruthTable('A.(B+C)')
+>>> table.set_ordering(['B', 'A', 'C'])
+>>> print(table)
++---+---+---++---+
+| B | A | C || X |
++---+---+---++---+
+| 0 | 0 | 0 || 0 |
++---+---+---++---+
+| 0 | 0 | 1 || 0 |
++---+---+---++---+
+| 0 | 1 | 0 || 0 |
++---+---+---++---+
+| 0 | 1 | 1 || 1 |
++---+---+---++---+
+| 1 | 0 | 0 || 0 |
++---+---+---++---+
+| 1 | 0 | 1 || 0 |
++---+---+---++---+
+| 1 | 1 | 0 || 1 |
++---+---+---++---+
+| 1 | 1 | 1 || 1 |
++---+---+---++---+
