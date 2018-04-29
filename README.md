@@ -17,7 +17,8 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 - ```clear_aliases()```
 - ```sum_of_products()```
 - ```merge(table, operator)```
-
+- ```set_ordering(ordering)```
+- ```clear_ordering()```
 
 ## Usage
 ```
