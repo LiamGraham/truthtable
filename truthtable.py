@@ -18,8 +18,6 @@ class TruthTable:
 		operations (dict[str, lambda]): possible boolean operations and their symbols
 	"""
 
-	# operations = {}
-
 	def __init__(self, expression):
 		"""
 		Creates a new TruthTable using the given expression. The ouputs are calculated upon creation.
@@ -137,14 +135,15 @@ class TruthTable:
 		Returns (str): sum of products for this truth table
 		"""
 		products = ""
-		for i in range(0, len(self.outputs)):
-			if self.outputs[i] == 0:
-				continue
-			inputs = self._get_inputs(i)
+		# indices of true outputs
+		trues = [i for i in range(0, len(self.outputs)) if self.outputs[i]==1]
+
+		for i, x in enumerate(trues):
+			inputs = self._get_inputs(x)
 			sub = ""
 			for j in range(0, len(inputs)):
 				sub += f"{'!'*(inputs[j]=='0')}{self.variables[j]}{'.'*(j<len(inputs)-1)}"
-			products += f"({sub}){'+'*(i<len(self.outputs)-1)}"
+			products += f"({sub}){'+'*(i<(len(trues)-1))}"
 		return products
 
 
@@ -482,13 +481,19 @@ class TruthTable:
 		# Variables to be displayed (i.e. aliases)
 		display_vars = [self.aliases[x] for x in self.variables]
 		# Spacing of each column based on length of each display variable
-		column_spacing = [len(x) for x in display_vars]
+		column_spacing = []
 
 		# Horiztonal table divider (e.g. '+---+---++---+')
 		line = ""
-		for x in column_spacing:
-			line += "+" + ("-"*(x+2))
+		for x in display_vars:
+			line += "+" + ("-"*(len(x)+2))
 		line += "++---+\n"
+
+		for i in range(0, len(display_vars)):
+			# Spacings on left and right of individual input, determined by length of alias
+			left_spacing = " "*(len(display_vars[i])//2 + 1)
+			right_spacing = " "*(len(left_spacing) - (len(display_vars[i])%2==0))
+			column_spacing.append((left_spacing, right_spacing))
 
 		# Table representation, beginning with initial row of variables
 		string = f"{line}| {' | '.join(display_vars)} || X |\n{line}"
@@ -496,11 +501,7 @@ class TruthTable:
 			# Sequence of 0s and 1s forming input 
 			inputs = self._get_inputs(i)
 			for j in range(0, len(display_vars)):
-				# Spacings on left and right of individual input, determined by length of alias
-				left_spacing = " "*(column_spacing[j]//2 + 1)
-				right_spacing = " "*(len(left_spacing) - (len(display_vars[j])%2==0))
-				#right_spacing = left_spacing[:len(left_spacing)-(len(display_vars[j])%2)^1]
-				string += f"|{left_spacing}{inputs[j]}{right_spacing}"
+				string += f"|{column_spacing[j][0]}{inputs[j]}{column_spacing[j][1]}"
 			string += f"|| {self.outputs[i]} |\n{line}"
 		return string[:-1]
 
