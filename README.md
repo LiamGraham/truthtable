@@ -30,7 +30,7 @@ TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'A', 'B': 'A'}
 ```
 or in the terminal
 ```
->>> python truthtable.py A.B
+$ python truthtable.py A.B
 +---+---++---+
 | A | B || X |
 +---+---++---+
