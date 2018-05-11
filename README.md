@@ -28,6 +28,21 @@ Tool to evaluate any given boolean expression and generate a truth table of all 
 >>> table
 TruthTable: expression='A.B', variables=['A', 'B'], aliases={'A': 'A', 'B': 'A'}, outputs=[0, 0, 0, 1]
 ```
+or in the terminal
+```
+>>> python truthtable.py A.B
++---+---++---+
+| A | B || X |
++---+---++---+
+| 0 | 0 || 0 |
++---+---++---+
+| 0 | 1 || 0 |
++---+---++---+
+| 1 | 0 || 0 |
++---+---++---+
+| 1 | 1 || 1 |
++---+---++---+
+```
 ### View Table
 ```
 >>> print(table)
