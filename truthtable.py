@@ -169,7 +169,7 @@ class TruthTable:
             table (TruthTable): table to be merged with this table
             operator (str): operator to link expressions of given table and this table
             distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced
-            with variables not occuring in self.expression, otherwise table.expression will remain unchanged
+                with variables not occuring in self.expression, otherwise table.expression will remain unchanged
         """
         self.set_expression(self._merging(table, operator, distinct))   
 
@@ -185,7 +185,7 @@ class TruthTable:
             table (TruthTable): table to be merged with this table
             operator (str): operator to link expressions of given table and this table
             distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced
-            with variables not occuring in self.expression, otherwise table.expression will remain unchanged
+                with variables not occuring in self.expression, otherwise table.expression will remain unchanged
 
         Returns (TruthTable): truth table of expression created by combining self.expression and table.expression linked
         by operator
@@ -201,7 +201,7 @@ class TruthTable:
             table (TruthTable): table to be merged with this table
             operator (str): operator to link expressions of given table and this table
             distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced
-            with variables not occuring in self.expression, otherwise table.expression will remain unchanged
+                with variables not occuring in self.expression, otherwise table.expression will remain unchanged
 
         Raises:
             TypeError: if given table is None
@@ -214,8 +214,6 @@ class TruthTable:
         if operator not in self.operations.keys():
             raise InvalidExpressionError(f"Illegal operator: {operator}")
         
-        # Variables in self.expression also in table.expression
-        duplicates = []
         texp = table.expression
 
         if distinct:
@@ -317,7 +315,7 @@ class TruthTable:
             expression (str): boolean expression to be evaluated
             variables (list[str]): list of variables in complete expression
             inputs (str): binary string, with each bit being the input for the variable
-            at the same index in 'variables' 
+                at the same index in 'variables' 
         
         Returns: (str) Output of expression
         """
@@ -445,7 +443,8 @@ class TruthTable:
 
         e.g. A.(B+C) is valid, A.B+C is not 
 
-        Raises: InvalidExpressionError: if precendence/order of operations is not properly indicated
+        Raises: 
+            InvalidExpressionError: if precendence/order of operations is not properly indicated
 
         """
         expression = list(f"({self.expression})")
