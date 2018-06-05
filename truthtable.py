@@ -36,7 +36,6 @@ class TruthTable:
         self.aliases = {}
         self.operations = {}
         self.functions = {}
-        self.negators = []
         self._initialise_operations()
         self.set_expression(expression)
 
