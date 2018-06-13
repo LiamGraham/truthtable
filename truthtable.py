@@ -1,5 +1,6 @@
 import string
 
+
 class TruthTable:
     """
     Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression.
@@ -17,7 +18,7 @@ class TruthTable:
         expression (str): boolean expression for which table is created
         variables (list[str]): variables in expression
         outputs (list[int]): complete set of outputs of truth table
-        aliases (dict[str, str]): aliases of variables to be displayed 
+        aliases (dict[str, str]): aliases of variables to be displayed
         operations (dict[str, lambda]): possible boolean operations and their symbols
     """
 
@@ -39,7 +40,6 @@ class TruthTable:
         self._initialise_operations()
         self.set_expression(expression)
 
-
     def get_row(self, row_num):
         """
         Returns the inputs and output of the row in the truth table of the given row number. Rows are zero-indexed (i.e.
@@ -59,7 +59,6 @@ class TruthTable:
         """
         return self._get_rows_in_range(row_num, row_num+1)
 
-
     def get_output(self, inputs):
         """
         Returns output of boolean expression for given input string.
@@ -75,7 +74,6 @@ class TruthTable:
         row = int(inputs, base=2)
         return self.outputs[row]
 
-
     def set_expression(self, expression):
         """
         Sets the boolean expression of the table to the given expression and recalculates the ouputs.
@@ -89,7 +87,6 @@ class TruthTable:
         self._parse_expression()
         self.clear_aliases()
 
-
     def set_alias(self, variable, alias):
         """
         Set an alias for a variable of the expression. The alias will be displayed in place of actual variable when the
@@ -97,7 +94,6 @@ class TruthTable:
         """
         if alias is not None and variable is not None and variable in self.variables:
             self.aliases[variable] = alias
-
 
     def clear_aliases(self):
         """
@@ -107,7 +103,6 @@ class TruthTable:
         self.aliases.clear()
         for x in self.variables:
             self.aliases[x] = x
-
 
     def equivalent(self, expression):
         """
@@ -121,7 +116,6 @@ class TruthTable:
         else:
             table = self
         return table == self
-
 
     def sum_of_products(self):
         """
@@ -154,7 +148,6 @@ class TruthTable:
             products += f"({sub}){'+'*(i<(len(trues)-1))}"
         return products
 
-
     def merge(self, table, operator, distinct=True):
         """
         Merges the expression of the given truth table with this table by linking them with a single operator and
@@ -171,7 +164,6 @@ class TruthTable:
                 with variables not occuring in self.expression, otherwise table.expression will remain unchanged
         """
         self.set_expression(self._merging(table, operator, distinct))   
-
 
     def merged(self, table, operator, distinct=True):
         """
@@ -190,7 +182,6 @@ class TruthTable:
         by operator
         """
         return TruthTable(self._merging(table, operator, distinct))
-
 
     def _merging(self, table, operator, distinct=True):
         """
@@ -213,13 +204,12 @@ class TruthTable:
         if operator not in self.operations.keys():
             raise InvalidExpressionError(f"Illegal operator: {operator}")
         
-        texp = table.expression
+        texpr = table.expression
 
         if distinct:
-            texp = self._replace_duplicates(texp)
+            texpr = self._replace_duplicates(texpr)
 
-        return f"({self.expression}){operator}({texp})"
-
+        return f"({self.expression}){operator}({texpr})"
 
     def set_ordering(self, ordering):
         """
@@ -235,7 +225,6 @@ class TruthTable:
         self.variables = ordering
         self._parse_expression()
 
-
     def clear_ordering(self):
         """
         Remove specified ordering of variables and restore natural ordering (i.e. order in which they appear in
@@ -243,7 +232,6 @@ class TruthTable:
         """
         self.variables = self._parse_variables()
         self._parse_expression()
-
 
     def add_operator(self, name, symbol):
         """
@@ -265,8 +253,6 @@ class TruthTable:
 
         self.operations[symbol] = self.functions[name]
 
-
-
     def _replace_duplicates(self, expression):
         # Variables in self.expression also in table.expression
         duplicates = []
@@ -282,7 +268,6 @@ class TruthTable:
             expression = expression.replace(x, next(available))
         return expression
 
-
     def _parse_expression(self):
         """
         Calculates outputs of truth table for boolean expression of this truth table.
@@ -296,15 +281,17 @@ class TruthTable:
             inputs = self._get_inputs(i)
             self.outputs.append(self._evaluate_expression(expression, inputs))
 
-
     def _parse_variables(self):
         non_variables = list(self.operations.keys()) + ['(', ')', '!']
+        # Variables in expression
+        expr_variables = set(self.expression).difference(non_variables)
+        # Variables in order of appearance in expression
         variables = []
+        # Necessary to maintain order of variables
         for x in self.expression:
-            if x in set(self.expression).difference(non_variables) and x not in variables:
+            if x in expr_variables and x not in variables:
                 variables.append(x)
         return variables
-
 
     def _evaluate_expression(self, expression, inputs):
         """
@@ -331,7 +318,6 @@ class TruthTable:
                     expression[start:i+1] = result
                     break
         return int(expression[0])
-
 
     def _compute_output(self, sub, inputs):
         """
@@ -367,7 +353,6 @@ class TruthTable:
         else:
             return str(self.operations[op](results[0], results[1]))
 
-
     def _validate_expression(self):
         """
         Determines if expression is valid. A valid expression will consist only of single-character variables and valid
@@ -382,7 +367,6 @@ class TruthTable:
         self._check_bracket_closure()
         self._check_symbols()
         self._check_precedence()
-
 
     def _check_symbols(self):
         """
@@ -413,7 +397,6 @@ class TruthTable:
             message += "Expression must contain variables and operators"*(len(expression)==0)
             raise InvalidExpressionError(message)
 
-
     def _check_bracket_closure(self):
         """
         Determine if expression brackets are properly matched.
@@ -432,7 +415,6 @@ class TruthTable:
                 break
         if closure != 0:
             raise InvalidExpressionError("Brackets are improperly matched")
-
 
     def _check_precedence(self):
         """
@@ -459,7 +441,6 @@ class TruthTable:
                     expression[start:i+1] = "X"
                     break
 
-
     def _get_inputs(self, value):
         """
         Returns sequence of bits together forming input for boolean expression, whereby the corresponding variable of
@@ -470,7 +451,6 @@ class TruthTable:
         Returns (str): sequence of bits forming input
         """
         return format(value, f'0{len(self.variables)}b')
-
 
     def __str__(self):
         """
@@ -493,7 +473,6 @@ class TruthTable:
         Returns (str): informal representation of truth table
         """
         return self._get_rows_in_range(0, len(self.outputs))
-
 
     def _get_rows_in_range(self, start, end):
         """
@@ -537,7 +516,6 @@ class TruthTable:
             string += f"|| {self.outputs[i]} |\n{line}"
         return string[:-1]
 
-
     def _initialise_operations(self):
         """
         Bind the default legal operators to the appropriate functions.
@@ -549,7 +527,6 @@ class TruthTable:
             for symb in operators[op]:
                 self.operations[symb] = self.functions[op]
 
-
     def __repr__(self):
         """
         Returns a formal representation of the truth table of the form 
@@ -558,7 +535,6 @@ class TruthTable:
         Returns (str): formal representation of truth table
         """
         return f"TruthTable: expression='{self.expression}', variables={self.variables}, aliases={self.aliases}, outputs={self.outputs}"
-
 
     def __eq__(self, other):
         """
