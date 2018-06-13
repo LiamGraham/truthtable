@@ -98,7 +98,7 @@ class TruthTable:
     def clear_aliases(self):
         """
         Initially set the alias of each variable to be that variable (i.e. the initial 'alias' of variable 'A' is 'A').
-        
+
         """
         self.aliases.clear()
         for x in self.variables:
@@ -138,7 +138,8 @@ class TruthTable:
         """
         products = ""
         # indices of true outputs
-        trues = [i for i in range(0, len(self.outputs)) if self.outputs[i]==1]
+        trues = [i for i in range(0, len(self.outputs))
+                 if self.outputs[i] == 1]
 
         for i, x in enumerate(trues):
             inputs = self._get_inputs(x)
@@ -163,7 +164,7 @@ class TruthTable:
             distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced
                 with variables not occuring in self.expression, otherwise table.expression will remain unchanged
         """
-        self.set_expression(self._merging(table, operator, distinct))   
+        self.set_expression(self._merging(table, operator, distinct))
 
     def merged(self, table, operator, distinct=True):
         """
@@ -203,7 +204,7 @@ class TruthTable:
             raise TypeError(f"Table must be a TruthTable, not a {type(table)}")
         if operator not in self.operations.keys():
             raise InvalidExpressionError(f"Illegal operator: {operator}")
-        
+
         texpr = table.expression
 
         if distinct:
@@ -221,7 +222,8 @@ class TruthTable:
         if ordering is None:
             raise TypeError("Ordering cannot be None")
         if set(ordering) != set(self.variables):
-            raise InvalidExpressionError("Ordering must contain all variables in expression")
+            raise InvalidExpressionError(
+                "Ordering must contain all variables in expression")
         self.variables = ordering
         self._parse_expression()
 
@@ -242,27 +244,30 @@ class TruthTable:
             name (str): name of operator to be added (AND, XOR, or OR)
             symbol (str): symbol of operator to be added
         """
-        operators = {'AND':['.', '&'], 'OR':['+', '|'], 'XOR':['^', '#']}
+        operators = {'AND': ['.', '&'], 'OR': ['+', '|'], 'XOR': ['^', '#']}
         if name not in ['AND', 'OR', 'XOR']:
             raise InvalidExpressionError("Name must be AND, OR, or XOR")
         if len(symbol) != 1 or symbol in string.ascii_letters:
-            raise InvalidExpressionError("Symbol must be a single non-letter character")
+            raise InvalidExpressionError(
+                "Symbol must be a single non-letter character")
         for op in operators:
             if symbol in operators[op]:
-               raise InvalidExpressionError(f"'{symbol}' is already an operator") 
+                raise InvalidExpressionError(
+                    f"'{symbol}' is already an operator")
 
         self.operations[symbol] = self.functions[name]
 
     def _replace_duplicates(self, expression):
         # Variables in self.expression also in table.expression
         duplicates = []
-        
+
         for x in expression:
             if x in string.ascii_letters and x in self.expression:
                 duplicates.append(x)
-        
+
         # Available variables that may replace duplicate variables in table.expression
-        available = iter(sorted(set(string.ascii_uppercase).difference(set(self.expression).intersection(string.ascii_letters))))
+        available = iter(sorted(set(string.ascii_uppercase).difference(
+            set(self.expression).intersection(string.ascii_letters))))
 
         for x in duplicates:
             expression = expression.replace(x, next(available))
@@ -302,11 +307,11 @@ class TruthTable:
             variables (list[str]): list of variables in complete expression
             inputs (str): binary string, with each bit being the input for the variable
                 at the same index in 'variables' 
-        
+
         Returns: (str) Output of expression
         """
         expression = list(expression)
-        
+
         while len(expression) > 1:
             # Index of initial/opening bracketof sub-expression
             start = 0
@@ -314,7 +319,8 @@ class TruthTable:
                 if expression[i] == "(":
                     start = i
                 if expression[i] == ")":
-                    result = self._compute_output(expression[start:i+1], inputs)
+                    result = self._compute_output(
+                        expression[start:i+1], inputs)
                     expression[start:i+1] = result
                     break
         return int(expression[0])
@@ -340,8 +346,9 @@ class TruthTable:
                 continue
             result = -1
             if sub[i-1] == '!':
-                r = inputs[self.variables.index(element)] if element in self.variables else sub[i]
-                result = int(r)^1
+                r = inputs[self.variables.index(
+                    element)] if element in self.variables else sub[i]
+                result = int(r) ^ 1
             elif element in self.variables:
                 result = inputs[self.variables.index(element)]
             else:
@@ -394,7 +401,8 @@ class TruthTable:
                 break
             prev = char
         if message or not expression:
-            message += "Expression must contain variables and operators"*(len(expression)==0)
+            message += "Expression must contain variables and operators" * \
+                (len(expression) == 0)
             raise InvalidExpressionError(message)
 
     def _check_bracket_closure(self):
@@ -408,7 +416,7 @@ class TruthTable:
         """
         # Open brackets increment, closed brackets decrement, valid expression has closure of 0
         closure = 0
-        change = {'(':1, ')':-1}
+        change = {'(': 1, ')': -1}
         for x in self.expression:
             closure += change.get(x, 0)
             if closure < 0:
@@ -437,7 +445,8 @@ class TruthTable:
                     sub = expression[start+1:i]
                     # Sub-expression contains 3 characters (2 variables and 1 operator) + any negators that might be present
                     if len(sub) > (3+sub.count("!")):
-                        raise InvalidExpressionError("Order of operations unclear")
+                        raise InvalidExpressionError(
+                            "Order of operations unclear")
                     expression[start:i+1] = "X"
                     break
 
@@ -503,13 +512,14 @@ class TruthTable:
         for i in range(0, len(display_vars)):
             # Spacings on left and right of individual input, determined by length of alias
             left_spacing = " "*(len(display_vars[i])//2 + 1)
-            right_spacing = " "*(len(left_spacing) - (len(display_vars[i])%2==0))
+            right_spacing = " "*(len(left_spacing) -
+                                 (len(display_vars[i]) % 2 == 0))
             column_spacing.append((left_spacing, right_spacing))
 
         # Table representation, beginning with initial row of variables
         string = f"{line}| {' | '.join(display_vars)} || X |\n{line}"
         for i in range(start, end):
-            # Sequence of 0s and 1s forming input 
+            # Sequence of 0s and 1s forming input
             inputs = self._get_inputs(i)
             for j in range(0, len(display_vars)):
                 string += f"|{column_spacing[j][0]}{inputs[j]}{column_spacing[j][1]}"
@@ -520,8 +530,9 @@ class TruthTable:
         """
         Bind the default legal operators to the appropriate functions.
         """
-        self.functions = {'AND':lambda a,b: a&b, 'OR':lambda a,b: a|b, 'XOR':lambda a,b: a^b}
-        operators = {'AND':['.', '&'], 'OR':['+', '|'], 'XOR':['^', '#']}
+        self.functions = {'AND': lambda a, b: a & b,
+                          'OR': lambda a, b: a | b, 'XOR': lambda a, b: a ^ b}
+        operators = {'AND': ['.', '&'], 'OR': ['+', '|'], 'XOR': ['^', '#']}
 
         for op in operators:
             for symb in operators[op]:
