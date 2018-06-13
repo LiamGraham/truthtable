@@ -3,10 +3,11 @@ import string
 
 class TruthTable:
     """
-    Representation of a truth table of all possible combinations of inputs and outputs for a given boolean expression.
-    Boolean expressions are composed of single-character variables and operations. Expressions must be appropriately
-    divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or '(A.B).C') indicating precedence/order of
-    operations.
+    Representation of a truth table of all possible combinations of inputs and
+    outputs for a given boolean expression. Boolean expressions are composed of
+    single-character variables and operations. Expressions must be appropriately
+    divided by brackets (e.g. 'A.B.C' must be expressed as 'A.(B.C)' or
+    '(A.B).C') indicating precedence/order of operations.
 
     Operations:
     - AND: &, .
@@ -19,15 +20,18 @@ class TruthTable:
         variables (list[str]): variables in expression
         outputs (list[int]): complete set of outputs of truth table
         aliases (dict[str, str]): aliases of variables to be displayed
-        operations (dict[str, lambda]): possible boolean operations and their symbols
+        operations (dict[str, lambda]): possible boolean operations and their
+            symbols
     """
 
     def __init__(self, expression):
         """
-        Creates a new TruthTable using the given expression. The ouputs are calculated upon creation.
+        Creates a new TruthTable using the given expression. The ouputs are
+        calculated upon creation.
 
         Arguments:
-            expression (str): boolean expression for which truth table will be created
+            expression (str): boolean expression for which truth table will be
+                created
         """
         if expression is None:
             raise TypeError("Expression cannot be None")
@@ -42,8 +46,8 @@ class TruthTable:
 
     def get_row(self, row_num):
         """
-        Returns the inputs and output of the row in the truth table of the given row number. Rows are zero-indexed (i.e.
-        the first row is row 0).
+        Returns the inputs and output of the row in the truth table of the given
+        row number. Rows are zero-indexed (i.e. the first row is row 0).
 
         e.g. For expression=A.B, row_num=3
         +---+---++---+
@@ -63,11 +67,14 @@ class TruthTable:
         """
         Returns output of boolean expression for given input string.
 
-        Arguments:
-            inputs (str): combination of bits forming input for expression. For the expression A.B, the input '01' will
-            set A=0 and B=1. The order of inputs is determined by the order of the variables in the expression.
+        Arguments: 
+            inputs (str): combination of bits forming input for expression. 
+                For the expression A.B, the input '01' will set A=0 and B=1. 
+                The order of inputs is determined by the order of the variables
+                in the expression.
 
-        Returns (int): output of boolean expression for given inputs if inputs are valid, otherwise -1
+        Returns (int): output of boolean expression for given inputs if inputs
+            are valid, otherwise -1
         """
         if len(inputs) != len(self.variables) or inputs is None or inputs.count('0') + inputs.count('1') != len(self.variables):
             return -1
@@ -76,10 +83,12 @@ class TruthTable:
 
     def set_expression(self, expression):
         """
-        Sets the boolean expression of the table to the given expression and recalculates the ouputs.
+        Sets the boolean expression of the table to the given expression and
+        recalculates the ouputs.
 
-        Arguments:
-            expression (str): expression to which this table's expression will be set
+        Arguments: 
+            expression (str): expression to which this table's expression will
+                be set
         """
         self.expression = expression.replace(" ", "")
         self._validate_expression()
@@ -89,7 +98,8 @@ class TruthTable:
 
     def set_alias(self, variable, alias):
         """
-        Set an alias for a variable of the expression. The alias will be displayed in place of actual variable when the
+        Set an alias for a variable of the expression. The alias will be
+        displayed in place of actual variable when the
         table is printed.
         """
         if alias is not None and variable is not None and variable in self.variables:
@@ -97,8 +107,8 @@ class TruthTable:
 
     def clear_aliases(self):
         """
-        Initially set the alias of each variable to be that variable (i.e. the initial 'alias' of variable 'A' is 'A').
-
+        Initially set the alias of each variable to be that variable (i.e. the
+        initial 'alias' of variable 'A' is 'A').
         """
         self.aliases.clear()
         for x in self.variables:
@@ -106,10 +116,11 @@ class TruthTable:
 
     def equivalent(self, expression):
         """
-        Returns true if the expression of this truth table is equivalent to given expression (i.e. they both yield the
-        same outputs).
+        Returns true if the expression of this truth table is equivalent to
+        given expression (i.e. they both yield the same outputs).
 
-        Returns (boolean): true if given expression is equivalent to the expression of this table
+        Returns (boolean): true if given expression is equivalent to the
+            expression of this table
         """
         if expression != self.expression:
             table = TruthTable(expression)
@@ -151,36 +162,46 @@ class TruthTable:
 
     def merge(self, table, operator, distinct=True):
         """
-        Merges the expression of the given truth table with this table by linking them with a single operator and
-        recalculates the resulting outputs. If distinct is True, any variable names in table.expression also in
-        self.expression will be replaced with variables not occuring in self.expression. Otherwise, duplicate variable
-        symbols will be treated as referring to the same variable.
+        Merges the expression of the given truth table with this table by
+        linking them with a single operator and recalculates the resulting
+        outputs. If distinct is True, any variable names in table.expression
+        also in self.expression will be replaced with variables not occuring in
+        self.expression. Otherwise, duplicate variable symbols will be treated
+        as referring to the same variable.
 
         e.g. 'A.B' and 'A+B', linked by '+', become '(A.B)+(C+D)'
 
         Arguments:
             table (TruthTable): table to be merged with this table
-            operator (str): operator to link expressions of given table and this table
-            distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced
-                with variables not occuring in self.expression, otherwise table.expression will remain unchanged
+            operator (str): operator to link expressions of given table and 
+                this table
+            distinct (boolean): if true, any variable names in table.expression 
+                also in self.expression will be replaced with variables not 
+                occuring in self.expression, otherwise table.expression will 
+                remain unchanged
         """
         self.set_expression(self._merging(table, operator, distinct))
 
     def merged(self, table, operator, distinct=True):
         """
-        Returns a truth table of the expression created by combining the expression of the given truth table with this
-        table using a single linking operator. If distinct is True, any variable names in table.expression also in
-        self.expression will be replaced with variables not occuring in self.expression. Otherwise, duplicate variable
-        symbols will be treated as referring to the same variable.
+        Returns a truth table of the expression created by combining the
+        expression of the given truth table with this table using a single
+        linking operator. If distinct is True, any variable names in
+        table.expression also in self.expression will be replaced with variables
+        not occuring in self.expression. Otherwise, duplicate variable symbols
+        will be treated as referring to the same variable.
 
-        Arguments:
+        Arguments: 
             table (TruthTable): table to be merged with this table
-            operator (str): operator to link expressions of given table and this table
-            distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced
-                with variables not occuring in self.expression, otherwise table.expression will remain unchanged
+            operator (str): operator to link expressions of given table and 
+                this table
+            distinct (boolean): if true, any variable names in table.expression
+                also in self.expression will be replaced with variables not
+                occuring in self.expression, otherwise table.expression will 
+                remain unchanged
 
-        Returns (TruthTable): truth table of expression created by combining self.expression and table.expression linked
-        by operator
+        Returns (TruthTable): truth table of expression created by combining
+            self.expression and table.expression linked by operator
         """
         return TruthTable(self._merging(table, operator, distinct))
 
@@ -188,17 +209,22 @@ class TruthTable:
         """
         Returns merged expression for both self.merge and self.merged.
 
-        Arguments:
+        Arguments: 
             table (TruthTable): table to be merged with this table
-            operator (str): operator to link expressions of given table and this table
-            distinct (boolean): if true, any variable names in table.expression also in self.expression will be replaced
-                with variables not occuring in self.expression, otherwise table.expression will remain unchanged
+            operator (str): operator to link expressions of given table and this
+                table
+            distinct (boolean): if true, any variable names in table.expression 
+                also in self.expression will be replaced with variables not 
+                occuring in self.expression, otherwise table.expression will 
+                remain unchanged
 
         Raises:
             TypeError: if given table is None
-            InvalidExpressionError: if given operator is not legal (i.e. operator in self.operations.keys() == False)
+            InvalidExpressionError: if given operator is not legal (i.e.
+                operator in self.operations.keys() == False)
 
-        Returns (str): expression created by combining self.expression and table.expression linked by operator
+        Returns (str): expression created by combining self.expression and
+            table.expression linked by operator
         """
         if type(table) != TruthTable:
             raise TypeError(f"Table must be a TruthTable, not a {type(table)}")
@@ -217,7 +243,8 @@ class TruthTable:
         Set order in which variables will be arranged in truth table.
 
         Arguments:
-            ordering (list[str]): all variables in expression as they will be ordered in truth table
+            ordering (list[str]): all variables in expression as they will be
+                ordered in truth table
         """
         if ordering is None:
             raise TypeError("Ordering cannot be None")
@@ -229,16 +256,16 @@ class TruthTable:
 
     def clear_ordering(self):
         """
-        Remove specified ordering of variables and restore natural ordering (i.e. order in which they appear in
-        expression).
+        Remove specified ordering of variables and restore natural ordering
+        (i.e. order in which they appear in expression).
         """
         self.variables = self._parse_variables()
         self._parse_expression()
 
     def add_operator(self, name, symbol):
         """
-        Assign the given symbol to the function of the given name (AND, XOR, or OR). Symbol must be a single non-letter
-        character. 
+        Assign the given symbol to the function of the given name (AND, XOR, or
+        OR). Symbol must be a single non-letter character. 
 
         Arguments:
             name (str): name of operator to be added (AND, XOR, or OR)
@@ -265,7 +292,8 @@ class TruthTable:
             if x in string.ascii_letters and x in self.expression:
                 duplicates.append(x)
 
-        # Available variables that may replace duplicate variables in table.expression
+        # Available variables that may replace duplicate variables in
+        # table.expression
         available = iter(sorted(set(string.ascii_uppercase).difference(
             set(self.expression).intersection(string.ascii_letters))))
 
@@ -275,7 +303,8 @@ class TruthTable:
 
     def _parse_expression(self):
         """
-        Calculates outputs of truth table for boolean expression of this truth table.
+        Calculates outputs of truth table for boolean expression of this truth
+        table.
         """
         self.outputs = []
         self.clear_aliases()
@@ -305,8 +334,8 @@ class TruthTable:
         Arguments:
             expression (str): boolean expression to be evaluated
             variables (list[str]): list of variables in complete expression
-            inputs (str): binary string, with each bit being the input for the variable
-                at the same index in 'variables' 
+            inputs (str): binary string, with each bit being the input for the
+                variable at the same index in 'variables' 
 
         Returns: (str) Output of expression
         """
@@ -327,12 +356,13 @@ class TruthTable:
 
     def _compute_output(self, sub, inputs):
         """
-        Compute result of two-variable boolean expression, being a component of some larger expression (e.g. C.D in
-        A+(B.(C.D)))
+        Compute result of two-variable boolean expression, being a component of
+        some larger expression (e.g. C.D in A+(B.(C.D)))
 
         Arguments: sub (list[str]): sub-expression to be evaluated
 
-        Returns: (str) Output of sub-expression if inputs are valid, otherwise returns -1
+        Returns: (str) Output of sub-expression if inputs are valid, otherwise
+            returns -1
         """
         # Bits to be evaluated
         results = []
@@ -362,9 +392,10 @@ class TruthTable:
 
     def _validate_expression(self):
         """
-        Determines if expression is valid. A valid expression will consist only of single-character variables and valid
-        operators (i.e. '.', '^', '+', and '!'). The order of operations will be appropriately defined by closed
-        parentheses.
+        Determines if expression is valid. A valid expression will consist only
+        of single-character variables and valid operators (i.e. '.', '^', '+',
+        and '!'). The order of operations will be appropriately defined by
+        closed parentheses.
 
         Invalid Expressions:
         - A.
@@ -377,8 +408,9 @@ class TruthTable:
 
     def _check_symbols(self):
         """
-        Determine if non-parathetic symbols are legal (i.e. letters or operators) and are in a valid order (i.e.
-        operators precede and follow variables, and vice versa).
+        Determine if non-parathetic symbols are legal (i.e. letters or
+        operators) and are in a valid order (i.e. operators precede and follow
+        variables, and vice versa).
 
         Raises: InvalidExpressionError: if 
         """
@@ -414,7 +446,8 @@ class TruthTable:
         Raises:
             InvalidExpressionError: if brackets are improperly matched
         """
-        # Open brackets increment, closed brackets decrement, valid expression has closure of 0
+        # Open brackets increment, closed brackets decrement, valid expression
+        # has closure of 0
         closure = 0
         change = {'(': 1, ')': -1}
         for x in self.expression:
@@ -426,14 +459,16 @@ class TruthTable:
 
     def _check_precedence(self):
         """
-        Determine if order of operations is clearly indicated by paratheses. An expression must contain only of
-        parathesised subexpressions consisting of two variables (or subexpressions) and one operator. The outermost
+        Determine if order of operations is clearly indicated by paratheses. An
+        expression must consist only of parathesised subexpressions consisting
+        of two variables (or subexpressions) and one operator. The outermost
         subexpression need not be parenthesised.
 
         e.g. A.(B+C) is valid, A.B+C is not 
 
         Raises: 
-            InvalidExpressionError: if precendence/order of operations is not properly indicated
+            InvalidExpressionError: if precendence/order of operations is
+                not properly indicated
 
         """
         expression = list(f"({self.expression})")
@@ -443,7 +478,8 @@ class TruthTable:
                     start = i
                 if expression[i] == ")":
                     sub = expression[start+1:i]
-                    # Sub-expression contains 3 characters (2 variables and 1 operator) + any negators that might be present
+                    # Sub-expression contains 3 characters (2 variables and 1
+                    # operator) + any negators that might be present
                     if len(sub) > (3+sub.count("!")):
                         raise InvalidExpressionError(
                             "Order of operations unclear")
@@ -452,10 +488,13 @@ class TruthTable:
 
     def _get_inputs(self, value):
         """
-        Returns sequence of bits together forming input for boolean expression, whereby the corresponding variable of
-        each bit is self.variables[index of current bit].
+        Returns sequence of bits together forming input for boolean expression,
+        whereby the corresponding variable of each bit is self.variables[index
+        of current bit].
 
-        Arguments: value (int): base-10 (decimal) value to be converted to binary input sequence
+        Arguments: 
+            value (int): base-10 (decimal) value to be converted to
+            binary input sequence
 
         Returns (str): sequence of bits forming input
         """
@@ -463,8 +502,8 @@ class TruthTable:
 
     def __str__(self):
         """
-        Returns an informal string representation of the truth table, being a table-like arrangement of inputs and
-        outputs.
+        Returns an informal string representation of the truth table, being a
+        table-like arrangement of inputs and outputs.
 
         e.g. For expression=A.B:
         +---+---++---+
@@ -485,7 +524,8 @@ class TruthTable:
 
     def _get_rows_in_range(self, start, end):
         """
-        Returns an informal string representation of the rows of the truth table in the given range, being [start, end).
+        Returns an informal string representation of the rows of the truth table
+        in the given range, being [start, end).
 
         e.g. For expression=A.B, start=2, end=4
         +---+---++---+
@@ -540,8 +580,9 @@ class TruthTable:
 
     def __repr__(self):
         """
-        Returns a formal representation of the truth table of the form 
-        'TruthTable: expression=[expression], variables=[variables], outputs=[outputs]'.
+        Returns a formal representation of the truth table of the form
+        'TruthTable: expression=[expression], variables=[variables],
+        outputs=[outputs]'.
 
         Returns (str): formal representation of truth table
         """
@@ -549,11 +590,13 @@ class TruthTable:
 
     def __eq__(self, other):
         """
-        Returns true if given truth table has same outputs as this truth table. May be used to determine equivalency of
-        boolean expression. Two expressions are equivalent if they yield the same outputs for the same combinations of
-        inputs (e.g. !A.!B and !(A+B) are equivalent).
+        Returns true if given truth table has same outputs as this truth table.
+        May be used to determine equivalency of boolean expression. Two
+        expressions are equivalent if they yield the same outputs for the same
+        combinations of inputs (e.g. !A.!B and !(A+B) are equivalent).
 
-        Returns (boolean): true if outputs of given truth table equal outputs of this truth table
+        Returns (boolean): true if outputs of given truth table equal outputs of
+            this truth table
         """
         return other.outputs == self.outputs
 
