@@ -61,7 +61,7 @@ class TruthTable:
 
         Returns (str): inputs and output of row of given row number
         """
-        return self._get_rows_in_range(row_num, row_num+1)
+        return self._get_rows_in_range(row_num, row_num + 1)
 
     def get_output(self, inputs):
         """
@@ -76,7 +76,11 @@ class TruthTable:
         Returns (int): output of boolean expression for given inputs if inputs
             are valid, otherwise -1
         """
-        if len(inputs) != len(self.variables) or inputs is None or inputs.count('0') + inputs.count('1') != len(self.variables):
+        if (
+            len(inputs) != len(self.variables)
+            or inputs is None
+            or inputs.count("0") + inputs.count("1") != len(self.variables)
+        ):
             return -1
         row = int(inputs, base=2)
         return self.outputs[row]
@@ -149,14 +153,15 @@ class TruthTable:
         """
         products = ""
         # indices of true outputs
-        trues = [i for i in range(0, len(self.outputs))
-                 if self.outputs[i] == 1]
+        trues = [i for i in range(0, len(self.outputs)) if self.outputs[i] == 1]
 
         for i, x in enumerate(trues):
             inputs = self._get_inputs(x)
             sub = ""
             for j in range(0, len(inputs)):
-                sub += f"{'!'*(inputs[j]=='0')}{self.variables[j]}{'.'*(j<len(inputs)-1)}"
+                sub += (
+                    f"{'!'*(inputs[j]=='0')}{self.variables[j]}{'.'*(j<len(inputs)-1)}"
+                )
             products += f"({sub}){'+'*(i<(len(trues)-1))}"
         return products
 
@@ -250,7 +255,8 @@ class TruthTable:
             raise TypeError("Ordering cannot be None")
         if set(ordering) != set(self.variables):
             raise InvalidExpressionError(
-                "Ordering must contain all variables in expression")
+                "Ordering must contain all variables in expression"
+            )
         self.variables = ordering
         self._parse_expression()
 
@@ -271,16 +277,14 @@ class TruthTable:
             name (str): name of operator to be added (AND, XOR, or OR)
             symbol (str): symbol of operator to be added
         """
-        operators = {'AND': ['.', '&'], 'OR': ['+', '|'], 'XOR': ['^', '#']}
-        if name not in ['AND', 'OR', 'XOR']:
+        operators = {"AND": [".", "&"], "OR": ["+", "|"], "XOR": ["^", "#"]}
+        if name not in ["AND", "OR", "XOR"]:
             raise InvalidExpressionError("Name must be AND, OR, or XOR")
         if len(symbol) != 1 or symbol in string.ascii_letters:
-            raise InvalidExpressionError(
-                "Symbol must be a single non-letter character")
+            raise InvalidExpressionError("Symbol must be a single non-letter character")
         for op in operators:
             if symbol in operators[op]:
-                raise InvalidExpressionError(
-                    f"'{symbol}' is already an operator")
+                raise InvalidExpressionError(f"'{symbol}' is already an operator")
 
         self.operations[symbol] = self.functions[name]
 
@@ -294,8 +298,13 @@ class TruthTable:
 
         # Available variables that may replace duplicate variables in
         # table.expression
-        available = iter(sorted(set(string.ascii_uppercase).difference(
-            set(self.expression).intersection(string.ascii_letters))))
+        available = iter(
+            sorted(
+                set(string.ascii_uppercase).difference(
+                    set(self.expression).intersection(string.ascii_letters)
+                )
+            )
+        )
 
         for x in duplicates:
             expression = expression.replace(x, next(available))
@@ -311,12 +320,12 @@ class TruthTable:
 
         expression = f"({self.expression})"
 
-        for i in range(0, 2**len(self.variables)):
+        for i in range(0, 2 ** len(self.variables)):
             inputs = self._get_inputs(i)
             self.outputs.append(self._evaluate_expression(expression, inputs))
 
     def _parse_variables(self):
-        non_variables = list(self.operations.keys()) + ['(', ')', '!']
+        non_variables = list(self.operations.keys()) + ["(", ")", "!"]
         # Variables in expression
         expr_variables = set(self.expression).difference(non_variables)
         # Variables in order of appearance in expression
@@ -348,9 +357,8 @@ class TruthTable:
                 if expression[i] == "(":
                     start = i
                 if expression[i] == ")":
-                    result = self._compute_output(
-                        expression[start:i+1], inputs)
-                    expression[start:i+1] = result
+                    result = self._compute_output(expression[start : i + 1], inputs)
+                    expression[start : i + 1] = result
                     break
         return int(expression[0])
 
@@ -371,13 +379,16 @@ class TruthTable:
         # Replace variables with appropriate bits
         for i in range(0, len(sub)):
             element = sub[i]
-            if element not in (self.variables + ['0', '1']):
+            if element not in (self.variables + ["0", "1"]):
                 op = element if element in self.operations.keys() else op
                 continue
             result = -1
-            if sub[i-1] == '!':
-                r = inputs[self.variables.index(
-                    element)] if element in self.variables else sub[i]
+            if sub[i - 1] == "!":
+                r = (
+                    inputs[self.variables.index(element)]
+                    if element in self.variables
+                    else sub[i]
+                )
                 result = int(r) ^ 1
             elif element in self.variables:
                 result = inputs[self.variables.index(element)]
@@ -420,21 +431,38 @@ class TruthTable:
 
         for i in range(0, len(expression)):
             char = expression[i]
-            if char in self.operations.keys() and (prev not in string.ascii_letters or i == (len(expression) - 1)):
-                message = f"Operator must occur between variables or subexpressions ({i})"
+            if char in self.operations.keys() and (
+                prev not in string.ascii_letters or i == (len(expression) - 1)
+            ):
+                message = (
+                    f"Operator must occur between variables or subexpressions ({i})"
+                )
                 break
-            elif char in string.ascii_letters and i > 0 and prev != '!' and prev not in self.operations.keys():
+            elif (
+                char in string.ascii_letters
+                and i > 0
+                and prev != "!"
+                and prev not in self.operations.keys()
+            ):
                 message = f"Variable must precede or follow an operator ({i})"
                 break
-            elif char == '!' and ((prev not in self.operations.keys() and i > 0) or (i == (len(expression) - 1))):
+            elif char == "!" and (
+                (prev not in self.operations.keys() and i > 0)
+                or (i == (len(expression) - 1))
+            ):
                 message = f"Negator must precede a variable {'and follow an operator '*(i>0)}({i})"
-            elif char != '!' and char not in self.operations.keys() and char not in string.ascii_letters:
+            elif (
+                char != "!"
+                and char not in self.operations.keys()
+                and char not in string.ascii_letters
+            ):
                 message = f"Invalid symbol in expression: {char} ({i})"
                 break
             prev = char
         if message or not expression:
-            message += "Expression must contain variables and operators" * \
-                (len(expression) == 0)
+            message += "Expression must contain variables and operators" * (
+                len(expression) == 0
+            )
             raise InvalidExpressionError(message)
 
     def _check_bracket_closure(self):
@@ -449,7 +477,7 @@ class TruthTable:
         # Open brackets increment, closed brackets decrement, valid expression
         # has closure of 0
         closure = 0
-        change = {'(': 1, ')': -1}
+        change = {"(": 1, ")": -1}
         for x in self.expression:
             closure += change.get(x, 0)
             if closure < 0:
@@ -477,13 +505,12 @@ class TruthTable:
                 if expression[i] == "(":
                     start = i
                 if expression[i] == ")":
-                    sub = expression[start+1:i]
+                    sub = expression[start + 1 : i]
                     # Sub-expression contains 3 characters (2 variables and 1
                     # operator) + any negators that might be present
-                    if len(sub) > (3+sub.count("!")):
-                        raise InvalidExpressionError(
-                            "Order of operations unclear")
-                    expression[start:i+1] = "X"
+                    if len(sub) > (3 + sub.count("!")):
+                        raise InvalidExpressionError("Order of operations unclear")
+                    expression[start : i + 1] = "X"
                     break
 
     def _get_inputs(self, value):
@@ -498,7 +525,7 @@ class TruthTable:
 
         Returns (str): sequence of bits forming input
         """
-        return format(value, f'0{len(self.variables)}b')
+        return format(value, f"0{len(self.variables)}b")
 
     def __str__(self):
         """
@@ -546,14 +573,13 @@ class TruthTable:
         # Horiztonal table divider (e.g. '+---+---++---+')
         line = ""
         for x in display_vars:
-            line += "+" + ("-"*(len(x)+2))
+            line += "+" + ("-" * (len(x) + 2))
         line += "++---+\n"
 
         for i in range(0, len(display_vars)):
             # Spacings on left and right of individual input, determined by length of alias
-            left_spacing = " "*(len(display_vars[i])//2 + 1)
-            right_spacing = " "*(len(left_spacing) -
-                                 (len(display_vars[i]) % 2 == 0))
+            left_spacing = " " * (len(display_vars[i]) // 2 + 1)
+            right_spacing = " " * (len(left_spacing) - (len(display_vars[i]) % 2 == 0))
             column_spacing.append((left_spacing, right_spacing))
 
         # Table representation, beginning with initial row of variables
@@ -570,9 +596,12 @@ class TruthTable:
         """
         Bind the default legal operators to the appropriate functions.
         """
-        self.functions = {'AND': lambda a, b: a & b,
-                          'OR': lambda a, b: a | b, 'XOR': lambda a, b: a ^ b}
-        operators = {'AND': ['.', '&'], 'OR': ['+', '|'], 'XOR': ['^', '#']}
+        self.functions = {
+            "AND": lambda a, b: a & b,
+            "OR": lambda a, b: a | b,
+            "XOR": lambda a, b: a ^ b,
+        }
+        operators = {"AND": [".", "&"], "OR": ["+", "|"], "XOR": ["^", "#"]}
 
         for op in operators:
             for symb in operators[op]:
@@ -602,13 +631,13 @@ class TruthTable:
 
 
 class InvalidExpressionError(Exception):
-
     def __init__(self, message):
         self.message = message
 
 
 if __name__ == "__main__":
     import sys
+
     try:
         print(TruthTable(sys.argv[1]))
     except IndexError:
