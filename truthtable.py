@@ -67,9 +67,9 @@ class TruthTable:
         """
         Returns output of boolean expression for given input string.
 
-        Arguments: 
-            inputs (str): combination of bits forming input for expression. 
-                For the expression A.B, the input '01' will set A=0 and B=1. 
+        Arguments:
+            inputs (str): combination of bits forming input for expression.
+                For the expression A.B, the input '01' will set A=0 and B=1.
                 The order of inputs is determined by the order of the variables
                 in the expression.
 
@@ -90,7 +90,7 @@ class TruthTable:
         Sets the boolean expression of the table to the given expression and
         recalculates the ouputs.
 
-        Arguments: 
+        Arguments:
             expression (str): expression to which this table's expression will
                 be set
         """
@@ -178,11 +178,11 @@ class TruthTable:
 
         Arguments:
             table (TruthTable): table to be merged with this table
-            operator (str): operator to link expressions of given table and 
+            operator (str): operator to link expressions of given table and
                 this table
-            distinct (boolean): if true, any variable names in table.expression 
-                also in self.expression will be replaced with variables not 
-                occuring in self.expression, otherwise table.expression will 
+            distinct (boolean): if true, any variable names in table.expression
+                also in self.expression will be replaced with variables not
+                occuring in self.expression, otherwise table.expression will
                 remain unchanged
         """
         self.set_expression(self._merging(table, operator, distinct))
@@ -196,13 +196,13 @@ class TruthTable:
         not occuring in self.expression. Otherwise, duplicate variable symbols
         will be treated as referring to the same variable.
 
-        Arguments: 
+        Arguments:
             table (TruthTable): table to be merged with this table
-            operator (str): operator to link expressions of given table and 
+            operator (str): operator to link expressions of given table and
                 this table
             distinct (boolean): if true, any variable names in table.expression
                 also in self.expression will be replaced with variables not
-                occuring in self.expression, otherwise table.expression will 
+                occuring in self.expression, otherwise table.expression will
                 remain unchanged
 
         Returns (TruthTable): truth table of expression created by combining
@@ -214,13 +214,13 @@ class TruthTable:
         """
         Returns merged expression for both self.merge and self.merged.
 
-        Arguments: 
+        Arguments:
             table (TruthTable): table to be merged with this table
             operator (str): operator to link expressions of given table and this
                 table
-            distinct (boolean): if true, any variable names in table.expression 
-                also in self.expression will be replaced with variables not 
-                occuring in self.expression, otherwise table.expression will 
+            distinct (boolean): if true, any variable names in table.expression
+                also in self.expression will be replaced with variables not
+                occuring in self.expression, otherwise table.expression will
                 remain unchanged
 
         Raises:
@@ -271,7 +271,7 @@ class TruthTable:
     def add_operator(self, name, symbol):
         """
         Assign the given symbol to the function of the given name (AND, XOR, or
-        OR). Symbol must be a single non-letter character. 
+        OR). Symbol must be a single non-letter character.
 
         Arguments:
             name (str): name of operator to be added (AND, XOR, or OR)
@@ -338,13 +338,13 @@ class TruthTable:
 
     def _evaluate_expression(self, expression, inputs):
         """
-        Evaluate given boolean expression for some combination of inputs. 
+        Evaluate given boolean expression for some combination of inputs.
 
         Arguments:
             expression (str): boolean expression to be evaluated
             variables (list[str]): list of variables in complete expression
             inputs (str): binary string, with each bit being the input for the
-                variable at the same index in 'variables' 
+                variable at the same index in 'variables'
 
         Returns: (str) Output of expression
         """
@@ -423,7 +423,7 @@ class TruthTable:
         operators) and are in a valid order (i.e. operators precede and follow
         variables, and vice versa).
 
-        Raises: InvalidExpressionError: if 
+        Raises: InvalidExpressionError: if expression contains illegal symbols
         """
         message = ""
         prev = "\n"
@@ -492,9 +492,9 @@ class TruthTable:
         of two variables (or subexpressions) and one operator. The outermost
         subexpression need not be parenthesised.
 
-        e.g. A.(B+C) is valid, A.B+C is not 
+        e.g. A.(B+C) is valid, A.B+C is not
 
-        Raises: 
+        Raises:
             InvalidExpressionError: if precendence/order of operations is
                 not properly indicated
 
@@ -519,7 +519,7 @@ class TruthTable:
         whereby the corresponding variable of each bit is self.variables[index
         of current bit].
 
-        Arguments: 
+        Arguments:
             value (int): base-10 (decimal) value to be converted to
             binary input sequence
 
